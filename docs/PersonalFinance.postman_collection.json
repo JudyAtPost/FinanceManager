@@ -1,0 +1,264 @@
+{
+  "info": {
+    "name": "Personal Finance API",
+    "description": "Request collection for the Personal Finance REST API. Set the baseUrl variable to the running API (default http://localhost:8080).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "year", "value": "2025" },
+    { "key": "month", "value": "3" },
+    { "key": "categoryId", "value": "" },
+    { "key": "transactionId", "value": "" },
+    { "key": "budgetId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api", "categories"] }
+          }
+        },
+        {
+          "name": "Get category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "{{categoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create category",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Groceries\",\n  \"type\": \"Expense\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api", "categories"] }
+          }
+        },
+        {
+          "name": "Update category",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Food\",\n  \"type\": \"Expense\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "{{categoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete category",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "{{categoryId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List transactions (filtered by month)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?year={{year}}&month={{month}}&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions"],
+              "query": [
+                { "key": "year", "value": "{{year}}" },
+                { "key": "month", "value": "{{month}}" },
+                { "key": "categoryId", "value": "{{categoryId}}", "disabled": true },
+                { "key": "type", "value": "Expense", "disabled": true },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get transaction",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/{{transactionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "{{transactionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create expense (Lunch at a cafe)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Lunch at a cafe\",\n  \"amount\": 12.50,\n  \"date\": \"2025-03-14\",\n  \"categoryId\": \"{{categoryId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/transactions", "host": ["{{baseUrl}}"], "path": ["api", "transactions"] }
+          }
+        },
+        {
+          "name": "Create income (Salary)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"March salary\",\n  \"amount\": 2500.00,\n  \"date\": \"2025-03-01\",\n  \"categoryId\": \"{{categoryId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/transactions", "host": ["{{baseUrl}}"], "path": ["api", "transactions"] }
+          }
+        },
+        {
+          "name": "Update transaction",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Lunch at a cafe\",\n  \"amount\": 14.00,\n  \"date\": \"2025-03-14\",\n  \"categoryId\": \"{{categoryId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/{{transactionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "{{transactionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete transaction",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/{{transactionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "{{transactionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Budgets",
+      "item": [
+        {
+          "name": "List budgets of a month",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/budgets?year={{year}}&month={{month}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "budgets"],
+              "query": [
+                { "key": "year", "value": "{{year}}" },
+                { "key": "month", "value": "{{month}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Budget vs. actual comparison",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/budgets/comparison?year={{year}}&month={{month}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "budgets", "comparison"],
+              "query": [
+                { "key": "year", "value": "{{year}}" },
+                { "key": "month", "value": "{{month}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create budget",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"year\": 2025,\n  \"month\": 3,\n  \"limit\": 300.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/budgets", "host": ["{{baseUrl}}"], "path": ["api", "budgets"] }
+          }
+        },
+        {
+          "name": "Update budget limit",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"limit\": 350.00\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/budgets/{{budgetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "budgets", "{{budgetId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete budget",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/budgets/{{budgetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "budgets", "{{budgetId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Summary",
+      "item": [
+        {
+          "name": "Monthly summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/summary/{{year}}/{{month}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "summary", "{{year}}", "{{month}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

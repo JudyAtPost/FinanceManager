@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: personalfinance-db
+    environment:
+      POSTGRES_DB: personalfinance
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d personalfinance"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: src/PersonalFinance.Api/Dockerfile
+    container_name: personalfinance-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__PersonalFinance: "Host=db;Port=5432;Database=personalfinance;Username=postgres;Password=postgres"
+      Cors__AllowedOrigins__0: "http://localhost:4200"
+      Cors__AllowedOrigins__1: "http://localhost:8081"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./src/personal-finance-web
+      dockerfile: Dockerfile
+    container_name: personalfinance-web
+    ports:
+      - "8081:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
