@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.0.2" />
     <PackageReference Include="AutoFixture" Version="4.18.1" />
     <PackageReference Include="FakeItEasy" Version="9.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.11" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,10 +20,6 @@
     <ProjectReference Include="..\..\src\PersonalFinance.Domain\PersonalFinance.Domain.csproj" />
     <ProjectReference Include="..\..\src\PersonalFinance.Infrastructure\PersonalFinance.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\PersonalFinance.Api\PersonalFinance.Api.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Repositories\" />
   </ItemGroup>
 
 </Project>

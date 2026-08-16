@@ -6,18 +6,12 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Infrastructure.Persistence.Repositories;
 
-/// <summary>
-/// EF Core backed <see cref="ITransactionRepository"/> with server-side filtering and paging.
-/// </summary>
 public sealed class TransactionRepository : ITransactionRepository
 {
     private readonly FinanceDbContext _context;
 
-    /// <summary>Initializes a new instance of the <see cref="TransactionRepository"/> class.</summary>
-    /// <param name="context">The database context.</param>
     public TransactionRepository(FinanceDbContext context) => _context = context;
 
-    /// <inheritdoc />
     public async Task<PagedResult<Transaction>> ListAsync(TransactionQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -25,24 +19,10 @@ public sealed class TransactionRepository : ITransactionRepository
         IQueryable<Transaction> filtered = _context.Transactions
             .AsNoTracking()
             .Include(transaction => transaction.Category)
-            .AsQueryable();
-
-        if (query.Month is { } month)
-        {
-            DateOnly first = month.FirstDay;
-            DateOnly last = month.LastDay;
-            filtered = filtered.Where(transaction => transaction.Date >= first && transaction.Date <= last);
-        }
-
-        if (query.CategoryId is { } categoryId)
-        {
-            filtered = filtered.Where(transaction => transaction.CategoryId == categoryId);
-        }
-
-        if (query.Type is { } type)
-        {
-            filtered = filtered.Where(transaction => transaction.Category!.Type == type);
-        }
+            .Where(transaction => query.Month == null
+                || (transaction.Date >= query.Month.Value.FirstDay && transaction.Date <= query.Month.Value.LastDay))
+            .Where(transaction => query.CategoryId == null || transaction.CategoryId == query.CategoryId)
+            .Where(transaction => query.Type == null || transaction.Category!.Type == query.Type);
 
         int totalCount = await filtered.CountAsync(cancellationToken).ConfigureAwait(false);
 
@@ -57,14 +37,12 @@ public sealed class TransactionRepository : ITransactionRepository
         return new PagedResult<Transaction>(items, totalCount, query.NormalizedPage, query.NormalizedPageSize);
     }
 
-    /// <inheritdoc />
     public async Task<Transaction?> GetAsync(Guid id, CancellationToken cancellationToken) =>
         await _context.Transactions
             .Include(transaction => transaction.Category)
             .FirstOrDefaultAsync(transaction => transaction.Id == id, cancellationToken)
             .ConfigureAwait(false);
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<CategoryTotal>> GetMonthlyTotalsByCategoryAsync(
         BudgetMonth month,
         CancellationToken cancellationToken)
@@ -85,9 +63,7 @@ public sealed class TransactionRepository : ITransactionRepository
             .ConfigureAwait(false);
     }
 
-    /// <inheritdoc />
     public void Add(Transaction transaction) => _context.Transactions.Add(transaction);
 
-    /// <inheritdoc />
     public void Remove(Transaction transaction) => _context.Transactions.Remove(transaction);
 }

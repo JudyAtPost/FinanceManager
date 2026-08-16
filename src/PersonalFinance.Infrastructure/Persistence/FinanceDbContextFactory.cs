@@ -8,7 +8,6 @@ public sealed class FinanceDbContextFactory : IDesignTimeDbContextFactory<Financ
     private const string FallbackConnectionString =
         "Host=localhost;Port=5432;Database=personalfinance;Username=postgres;Password=postgres";
 
-    /// <inheritdoc />
     public FinanceDbContext CreateDbContext(string[] args)
     {
         string connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__PersonalFinance")

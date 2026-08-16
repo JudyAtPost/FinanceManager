@@ -8,7 +8,6 @@ public sealed class UnitOfWork : IUnitOfWork
 
     public UnitOfWork(FinanceDbContext context) => _context = context;
 
-    /// <inheritdoc />
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken) =>
         _context.SaveChangesAsync(cancellationToken);
 }

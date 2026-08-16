@@ -6,7 +6,6 @@ namespace PersonalFinance.Infrastructure.Persistence.Configurations;
 
 public sealed class BudgetConfiguration : IEntityTypeConfiguration<Budget>
 {
-    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Budget> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);

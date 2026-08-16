@@ -6,7 +6,6 @@ namespace PersonalFinance.Infrastructure.Persistence.Configurations;
 
 public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
 {
-    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Transaction> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);

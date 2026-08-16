@@ -8,8 +8,6 @@ public interface ICategoryRepository
 
     Task<Category?> GetAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken);
-
     Task<bool> IsInUseAsync(Guid id, CancellationToken cancellationToken);
 
     void Add(Category category);
