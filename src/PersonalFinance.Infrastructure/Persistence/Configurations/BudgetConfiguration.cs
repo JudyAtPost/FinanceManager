@@ -4,9 +4,6 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Infrastructure.Persistence.Configurations;
 
-/// <summary>
-/// Maps <see cref="Budget"/> to the budgets table.
-/// </summary>
 public sealed class BudgetConfiguration : IEntityTypeConfiguration<Budget>
 {
     /// <inheritdoc />

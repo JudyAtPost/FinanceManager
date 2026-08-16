@@ -4,9 +4,6 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Application.Budgets;
 
-/// <summary>
-/// Manages monthly category budgets and compares them against actual spending.
-/// </summary>
 public sealed class BudgetService
 {
     private readonly IBudgetRepository _budgets;
@@ -14,11 +11,6 @@ public sealed class BudgetService
     private readonly ITransactionRepository _transactions;
     private readonly IUnitOfWork _unitOfWork;
 
-    /// <summary>Initializes a new instance of the <see cref="BudgetService"/> class.</summary>
-    /// <param name="budgets">Budget storage.</param>
-    /// <param name="categories">Category storage.</param>
-    /// <param name="transactions">Transaction storage, used for actual spending.</param>
-    /// <param name="unitOfWork">Used to commit changes.</param>
     public BudgetService(
         IBudgetRepository budgets,
         ICategoryRepository categories,
@@ -31,22 +23,12 @@ public sealed class BudgetService
         _unitOfWork = unitOfWork;
     }
 
-    /// <summary>Lists the budgets defined for one month.</summary>
-    /// <param name="month">The month to list.</param>
-    /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>All budgets of the month.</returns>
     public async Task<IReadOnlyList<BudgetDto>> ListAsync(BudgetMonth month, CancellationToken cancellationToken)
     {
         IReadOnlyList<Budget> budgets = await _budgets.ListForMonthAsync(month, cancellationToken).ConfigureAwait(false);
         return [.. budgets.Select(BudgetDto.FromDomain)];
     }
 
-    /// <summary>Creates a budget for one category and month.</summary>
-    /// <param name="request">The budget to create.</param>
-    /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>The created budget.</returns>
-    /// <exception cref="NotFoundException">The referenced category does not exist.</exception>
-    /// <exception cref="ConflictException">A budget already exists for the category and month.</exception>
     public async Task<BudgetDto> CreateAsync(CreateBudgetRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -74,12 +56,6 @@ public sealed class BudgetService
         return new BudgetDto(budget.Id, category.Id, category.Name, month.Year, month.Month, budget.Limit);
     }
 
-    /// <summary>Changes the limit of an existing budget.</summary>
-    /// <param name="id">The identifier of the budget.</param>
-    /// <param name="request">The new limit.</param>
-    /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>The updated budget.</returns>
-    /// <exception cref="NotFoundException">The budget does not exist.</exception>
     public async Task<BudgetDto> UpdateAsync(Guid id, UpdateBudgetRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -93,11 +69,6 @@ public sealed class BudgetService
         return BudgetDto.FromDomain(budget);
     }
 
-    /// <summary>Deletes a budget.</summary>
-    /// <param name="id">The identifier of the budget.</param>
-    /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>A task that completes once the budget is deleted.</returns>
-    /// <exception cref="NotFoundException">The budget does not exist.</exception>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         Budget budget = await _budgets.GetAsync(id, cancellationToken).ConfigureAwait(false)
@@ -107,10 +78,6 @@ public sealed class BudgetService
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>Compares every budget of a month against the expenses actually booked in that month.</summary>
-    /// <param name="month">The month to compare.</param>
-    /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>One comparison per budget, overspent categories first.</returns>
     public async Task<IReadOnlyList<BudgetComparison>> CompareAsync(BudgetMonth month, CancellationToken cancellationToken)
     {
         IReadOnlyList<Budget> budgets = await _budgets.ListForMonthAsync(month, cancellationToken).ConfigureAwait(false);
@@ -126,10 +93,6 @@ public sealed class BudgetService
         return Compare(budgets, totals);
     }
 
-    /// <summary>Compares budgets against category totals without touching storage.</summary>
-    /// <param name="budgets">The budgets of the month.</param>
-    /// <param name="totals">The per-category totals of the same month.</param>
-    /// <returns>One comparison per budget, overspent categories first.</returns>
     public static IReadOnlyList<BudgetComparison> Compare(
         IReadOnlyList<Budget> budgets,
         IReadOnlyList<CategoryTotal> totals)

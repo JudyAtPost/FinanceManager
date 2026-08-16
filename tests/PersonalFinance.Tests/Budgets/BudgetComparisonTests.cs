@@ -5,9 +5,6 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Tests.Budgets;
 
-/// <summary>
-/// Verifies how budgets are compared against the amounts actually spent.
-/// </summary>
 [TestClass]
 public sealed class BudgetComparisonTests
 {

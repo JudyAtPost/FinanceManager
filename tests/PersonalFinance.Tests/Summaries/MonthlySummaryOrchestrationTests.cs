@@ -1,14 +1,10 @@
 using FakeItEasy;
 using PersonalFinance.Application.Abstractions;
-using PersonalFinance.Application.Budgets;
 using PersonalFinance.Application.Summaries;
 using PersonalFinance.Domain;
 
 namespace PersonalFinance.Tests.Summaries;
 
-/// <summary>
-/// Verifies that the monthly summary is assembled from the right sources.
-/// </summary>
 [TestClass]
 public sealed class MonthlySummaryOrchestrationTests
 {

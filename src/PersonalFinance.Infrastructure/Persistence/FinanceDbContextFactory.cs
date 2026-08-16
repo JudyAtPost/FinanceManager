@@ -3,9 +3,6 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace PersonalFinance.Infrastructure.Persistence;
 
-/// <summary>
-/// Creates a <see cref="FinanceDbContext"/> for the EF Core command line tools.
-/// </summary>
 public sealed class FinanceDbContextFactory : IDesignTimeDbContextFactory<FinanceDbContext>
 {
     private const string FallbackConnectionString =

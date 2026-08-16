@@ -4,27 +4,17 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Application.Summaries;
 
-/// <summary>
-/// Builds the overview of a single month from the recorded transactions and budgets.
-/// </summary>
 public sealed class MonthlySummaryService
 {
     private readonly ITransactionRepository _transactions;
     private readonly IBudgetRepository _budgets;
 
-    /// <summary>Initializes a new instance of the <see cref="MonthlySummaryService"/> class.</summary>
-    /// <param name="transactions">Transaction storage, used for the aggregated totals.</param>
-    /// <param name="budgets">Budget storage, used for the budget versus actual comparison.</param>
     public MonthlySummaryService(ITransactionRepository transactions, IBudgetRepository budgets)
     {
         _transactions = transactions;
         _budgets = budgets;
     }
 
-    /// <summary>Builds the summary of the supplied month.</summary>
-    /// <param name="month">The month to summarize.</param>
-    /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>The summary of the month.</returns>
     public async Task<MonthlySummary> GetAsync(BudgetMonth month, CancellationToken cancellationToken)
     {
         IReadOnlyList<CategoryTotal> totals = await _transactions
@@ -38,11 +28,6 @@ public sealed class MonthlySummaryService
         return Build(month, totals, budgets);
     }
 
-    /// <summary>Builds the summary from already aggregated data, without touching storage.</summary>
-    /// <param name="month">The month being summarized.</param>
-    /// <param name="totals">Per-category totals of the month.</param>
-    /// <param name="budgets">Budgets defined for the month.</param>
-    /// <returns>The summary of the month.</returns>
     public static MonthlySummary Build(
         BudgetMonth month,
         IReadOnlyList<CategoryTotal> totals,

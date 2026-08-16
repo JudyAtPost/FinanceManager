@@ -5,15 +5,8 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Infrastructure.Persistence;
 
-/// <summary>
-/// Applies pending migrations and seeds a small set of starter categories.
-/// </summary>
 public static class DatabaseInitializer
 {
-    /// <summary>Migrates the database and seeds default categories when it is still empty.</summary>
-    /// <param name="services">The root service provider.</param>
-    /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>A task that completes once the database is ready.</returns>
     public static async Task InitializeAsync(IServiceProvider services, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(services);

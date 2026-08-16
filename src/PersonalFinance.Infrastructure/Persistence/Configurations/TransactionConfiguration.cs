@@ -4,9 +4,6 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Infrastructure.Persistence.Configurations;
 
-/// <summary>
-/// Maps <see cref="Transaction"/> to the transactions table.
-/// </summary>
 public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
 {
     /// <inheritdoc />

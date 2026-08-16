@@ -5,9 +5,6 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Tests.Summaries;
 
-/// <summary>
-/// Verifies the aggregation behind the monthly overview.
-/// </summary>
 [TestClass]
 public sealed class MonthlySummaryServiceTests
 {

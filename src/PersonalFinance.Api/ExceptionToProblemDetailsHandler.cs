@@ -5,17 +5,11 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Api;
 
-/// <summary>
-/// Translates domain and application exceptions into RFC 7807 problem details.
-/// </summary>
 public sealed class ExceptionToProblemDetailsHandler : IExceptionHandler
 {
     private readonly IProblemDetailsService _problemDetailsService;
     private readonly ILogger<ExceptionToProblemDetailsHandler> _logger;
 
-    /// <summary>Initializes a new instance of the <see cref="ExceptionToProblemDetailsHandler"/> class.</summary>
-    /// <param name="problemDetailsService">Writes the problem details response.</param>
-    /// <param name="logger">Used to log unexpected failures.</param>
     public ExceptionToProblemDetailsHandler(
         IProblemDetailsService problemDetailsService,
         ILogger<ExceptionToProblemDetailsHandler> logger)
@@ -24,7 +18,6 @@ public sealed class ExceptionToProblemDetailsHandler : IExceptionHandler
         _logger = logger;
     }
 
-    /// <inheritdoc />
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,

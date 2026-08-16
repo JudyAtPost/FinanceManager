@@ -7,9 +7,6 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Tests.Budgets;
 
-/// <summary>
-/// Verifies the rules applied when budgets are created, changed, and compared.
-/// </summary>
 [TestClass]
 public sealed class BudgetServiceTests
 {

@@ -4,9 +4,6 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Infrastructure.Persistence.Configurations;
 
-/// <summary>
-/// Maps <see cref="Category"/> to the categories table.
-/// </summary>
 public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
 {
     /// <inheritdoc />

@@ -6,15 +6,9 @@ using PersonalFinance.Infrastructure.Persistence.Repositories;
 
 namespace PersonalFinance.Infrastructure;
 
-/// <summary>
-/// Registers the PostgreSQL backed persistence layer.
-/// </summary>
+
 public static class DependencyInjection
 {
-    /// <summary>Adds the EF Core context and the repository implementations.</summary>
-    /// <param name="services">The service collection to add to.</param>
-    /// <param name="connectionString">The PostgreSQL connection string.</param>
-    /// <returns>The same service collection, for chaining.</returns>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString)
     {
         ArgumentNullException.ThrowIfNull(services);
