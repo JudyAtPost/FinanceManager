@@ -1,3 +1,4 @@
+using PersonalFinance.Api.Extensions;
 using PersonalFinance.Application.Transactions;
 using PersonalFinance.Domain;
 
@@ -12,17 +13,13 @@ public static class TransactionEndpoints
         RouteGroupBuilder group = app.MapGroup("/api/transactions").WithTags("Transactions");
 
         group.MapGet("/", async (
-                int? year,
-                int? month,
-                Guid? categoryId,
-                TransactionType? type,
-                int? page,
-                int? pageSize,
+                [AsParameters] TransactionFilter filter,
                 TransactionService service,
                 CancellationToken cancellationToken) =>
-                await ResolveMonth(year, month).Match(async budgetMonth =>
+                await ResolveMonth(filter.Year, filter.Month).Match(async budgetMonth =>
                 {
-                    var query = new TransactionQuery(budgetMonth, categoryId, type, page ?? 1, pageSize ?? 50);
+                    var query = new TransactionQuery(
+                        budgetMonth, filter.CategoryId, filter.Type, filter.Page ?? 1, filter.PageSize ?? 50);
                     return Results.Ok(await service.ListAsync(query, cancellationToken));
                 }))
             .WithName("ListTransactions")
@@ -61,4 +58,12 @@ public static class TransactionEndpoints
 
         return BudgetMonth.Create(year.Value, month.Value).Map(value => (BudgetMonth?)value);
     }
+
+    private readonly record struct TransactionFilter(
+        int? Year,
+        int? Month,
+        Guid? CategoryId,
+        TransactionType? Type,
+        int? Page,
+        int? PageSize);
 }

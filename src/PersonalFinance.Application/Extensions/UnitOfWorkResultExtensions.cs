@@ -1,7 +1,8 @@
 using PersonalFinance.Application.Abstractions;
 using PersonalFinance.Domain;
+using PersonalFinance.Domain.Extensions;
 
-namespace PersonalFinance.Application.Common;
+namespace PersonalFinance.Application.Extensions;
 
 /// <summary>
 /// Bridges <see cref="Result"/> pipelines with the unit of work so services can

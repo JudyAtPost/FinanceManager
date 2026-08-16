@@ -1,6 +1,7 @@
 using PersonalFinance.Application.Abstractions;
-using PersonalFinance.Application.Common;
+using PersonalFinance.Application.Extensions;
 using PersonalFinance.Domain;
+using PersonalFinance.Domain.Extensions;
 
 namespace PersonalFinance.Application.Categories;
 

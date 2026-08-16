@@ -1,4 +1,4 @@
-namespace PersonalFinance.Domain;
+namespace PersonalFinance.Domain.Extensions;
 
 /// <summary>
 /// Async combinators that let repository-backed workflows compose into a single

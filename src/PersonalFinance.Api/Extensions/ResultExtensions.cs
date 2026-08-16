@@ -1,6 +1,6 @@
 using PersonalFinance.Domain;
 
-namespace PersonalFinance.Api;
+namespace PersonalFinance.Api.Extensions;
 
 /// <summary>
 /// Maps <see cref="Result"/> outcomes to HTTP responses without throwing exceptions.

@@ -1,3 +1,4 @@
+using PersonalFinance.Api.Extensions;
 using PersonalFinance.Application.Categories;
 
 namespace PersonalFinance.Api.Endpoints;

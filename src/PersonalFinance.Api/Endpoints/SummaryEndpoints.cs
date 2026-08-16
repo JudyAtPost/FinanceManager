@@ -1,3 +1,4 @@
+using PersonalFinance.Api.Extensions;
 using PersonalFinance.Application.Summaries;
 using PersonalFinance.Domain;
 
