@@ -1,5 +1,4 @@
 using PersonalFinance.Application.Abstractions;
-using PersonalFinance.Application.Common;
 using PersonalFinance.Domain;
 
 namespace PersonalFinance.Application.Budgets;
@@ -29,53 +28,77 @@ public sealed class BudgetService
         return [.. budgets.Select(BudgetDto.FromDomain)];
     }
 
-    public async Task<BudgetDto> CreateAsync(CreateBudgetRequest request, CancellationToken cancellationToken)
+    public async Task<Result<BudgetDto>> CreateAsync(CreateBudgetRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        Category category = await _categories.GetAsync(request.CategoryId, cancellationToken).ConfigureAwait(false)
-            ?? throw new NotFoundException($"Category '{request.CategoryId}' was not found.");
+        Category? category = await _categories.GetAsync(request.CategoryId, cancellationToken).ConfigureAwait(false);
+        if (category is null)
+        {
+            return Error.NotFound($"Category '{request.CategoryId}' was not found.");
+        }
 
         if (category.Type != TransactionType.Expense)
         {
-            throw new ConflictException("Budgets can only be defined for expense categories.");
+            return Error.Conflict("Budgets can only be defined for expense categories.");
         }
 
-        var month = new BudgetMonth(request.Year, request.Month);
+        Result<BudgetMonth> month = BudgetMonth.Create(request.Year, request.Month);
+        if (month.IsFailure)
+        {
+            return month.Error!;
+        }
 
-        Budget? existing = await _budgets.GetForCategoryAndMonthAsync(request.CategoryId, month, cancellationToken).ConfigureAwait(false);
+        Budget? existing = await _budgets.GetForCategoryAndMonthAsync(request.CategoryId, month.Value, cancellationToken).ConfigureAwait(false);
         if (existing is not null)
         {
-            throw new ConflictException($"A budget for category '{category.Name}' already exists for {month}.");
+            return Error.Conflict($"A budget for category '{category.Name}' already exists for {month.Value}.");
         }
 
-        Budget budget = Budget.Create(request.CategoryId, month, request.Limit);
-        _budgets.Add(budget);
+        Result<Budget> budget = Budget.Create(request.CategoryId, month.Value, request.Limit);
+        if (budget.IsFailure)
+        {
+            return budget.Error!;
+        }
+
+        _budgets.Add(budget.Value);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return new BudgetDto(budget.Id, category.Id, category.Name, month.Year, month.Month, budget.Limit);
+        return new BudgetDto(budget.Value.Id, category.Id, category.Name, month.Value.Year, month.Value.Month, budget.Value.Limit);
     }
 
-    public async Task<BudgetDto> UpdateAsync(Guid id, UpdateBudgetRequest request, CancellationToken cancellationToken)
+    public async Task<Result<BudgetDto>> UpdateAsync(Guid id, UpdateBudgetRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        Budget budget = await _budgets.GetAsync(id, cancellationToken).ConfigureAwait(false)
-            ?? throw new NotFoundException($"Budget '{id}' was not found.");
+        Budget? budget = await _budgets.GetAsync(id, cancellationToken).ConfigureAwait(false);
+        if (budget is null)
+        {
+            return Error.NotFound($"Budget '{id}' was not found.");
+        }
 
-        budget.ChangeLimit(request.Limit);
+        Result changeLimit = budget.ChangeLimit(request.Limit);
+        if (changeLimit.IsFailure)
+        {
+            return changeLimit.Error!;
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return BudgetDto.FromDomain(budget);
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        Budget budget = await _budgets.GetAsync(id, cancellationToken).ConfigureAwait(false)
-            ?? throw new NotFoundException($"Budget '{id}' was not found.");
+        Budget? budget = await _budgets.GetAsync(id, cancellationToken).ConfigureAwait(false);
+        if (budget is null)
+        {
+            return Error.NotFound($"Budget '{id}' was not found.");
+        }
 
         _budgets.Remove(budget);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success();
     }
 
     public async Task<IReadOnlyList<BudgetComparison>> CompareAsync(BudgetMonth month, CancellationToken cancellationToken)

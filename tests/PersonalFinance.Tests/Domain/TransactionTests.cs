@@ -13,7 +13,7 @@ public sealed class TransactionTests
     [TestMethod]
     public void Create_WithValidValues_Succeeds()
     {
-        Transaction transaction = Transaction.Create("Lunch at a cafe", 12.50m, new DateOnly(2025, 3, 14), ValidCategoryId);
+        Transaction transaction = Transaction.Create("Lunch at a cafe", 12.50m, new DateOnly(2025, 3, 14), ValidCategoryId).Value;
 
         Assert.AreEqual("Lunch at a cafe", transaction.Description);
         Assert.AreEqual(12.50m, transaction.Amount);
@@ -26,71 +26,83 @@ public sealed class TransactionTests
     [DataRow(null)]
     [DataRow("")]
     [DataRow("   ")]
-    public void Create_WithABlankDescription_ThrowsDomainValidationException(string? description)
+    public void Create_WithABlankDescription_ReturnsValidationError(string? description)
     {
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => Transaction.Create(description ?? "", 10m, new DateOnly(2025, 3, 1), ValidCategoryId));
+        Result<Transaction> result = Transaction.Create(description ?? "", 10m, new DateOnly(2025, 3, 1), ValidCategoryId);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
-    public void Create_WithADescriptionExceedingMaxLength_ThrowsDomainValidationException()
+    public void Create_WithADescriptionExceedingMaxLength_ReturnsValidationError()
     {
         string tooLong = new('x', Transaction.MaxDescriptionLength + 1);
 
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => Transaction.Create(tooLong, 10m, new DateOnly(2025, 3, 1), ValidCategoryId));
+        Result<Transaction> result = Transaction.Create(tooLong, 10m, new DateOnly(2025, 3, 1), ValidCategoryId);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
     public void Create_TrimmsWhitespace()
     {
-        Transaction transaction = Transaction.Create("  Lunch  ", 10m, new DateOnly(2025, 3, 1), ValidCategoryId);
+        Transaction transaction = Transaction.Create("  Lunch  ", 10m, new DateOnly(2025, 3, 1), ValidCategoryId).Value;
 
         Assert.AreEqual("Lunch", transaction.Description);
     }
 
     [TestMethod]
-    public void Create_WithZeroAmount_ThrowsDomainValidationException()
+    public void Create_WithZeroAmount_ReturnsValidationError()
     {
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => Transaction.Create("Test", 0m, new DateOnly(2025, 3, 1), ValidCategoryId));
+        Result<Transaction> result = Transaction.Create("Test", 0m, new DateOnly(2025, 3, 1), ValidCategoryId);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
-    public void Create_WithNegativeOneAmount_ThrowsDomainValidationException()
+    public void Create_WithNegativeOneAmount_ReturnsValidationError()
     {
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => Transaction.Create("Test", -1m, new DateOnly(2025, 3, 1), ValidCategoryId));
+        Result<Transaction> result = Transaction.Create("Test", -1m, new DateOnly(2025, 3, 1), ValidCategoryId);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
-    public void Create_WithANegativeDecimalAmount_ThrowsDomainValidationException()
+    public void Create_WithANegativeDecimalAmount_ReturnsValidationError()
     {
         decimal amount = -100.50m;
 
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => Transaction.Create("Test", amount, new DateOnly(2025, 3, 1), ValidCategoryId));
+        Result<Transaction> result = Transaction.Create("Test", amount, new DateOnly(2025, 3, 1), ValidCategoryId);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
     public void Create_RoundsAmountToTwoDecimals()
     {
-        Transaction transaction = Transaction.Create("Test", 10.555m, new DateOnly(2025, 3, 1), ValidCategoryId);
+        Transaction transaction = Transaction.Create("Test", 10.555m, new DateOnly(2025, 3, 1), ValidCategoryId).Value;
 
         Assert.AreEqual(10.56m, transaction.Amount);
     }
 
     [TestMethod]
-    public void Create_WithAnEmptyCategoryId_ThrowsDomainValidationException()
+    public void Create_WithAnEmptyCategoryId_ReturnsValidationError()
     {
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => Transaction.Create("Test", 10m, new DateOnly(2025, 3, 1), Guid.Empty));
+        Result<Transaction> result = Transaction.Create("Test", 10m, new DateOnly(2025, 3, 1), Guid.Empty);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
     public void Update_ChangesAllValues()
     {
-        Transaction transaction = Transaction.Create("Lunch", 10m, new DateOnly(2025, 3, 1), ValidCategoryId);
+        Transaction transaction = Transaction.Create("Lunch", 10m, new DateOnly(2025, 3, 1), ValidCategoryId).Value;
         Guid newCategoryId = Guid.CreateVersion7();
 
         transaction.Update("Dinner", 20m, new DateOnly(2025, 3, 2), newCategoryId);
@@ -121,8 +133,8 @@ internal static class TransactionReflection
     public static void SetCategoryForTesting(out Transaction transaction, out Category category)
     {
         Guid categoryId = Guid.CreateVersion7();
-        transaction = Transaction.Create("Test", 10m, new DateOnly(2025, 3, 1), categoryId);
-        category = Category.Create("Test", TransactionType.Expense);
+        transaction = Transaction.Create("Test", 10m, new DateOnly(2025, 3, 1), categoryId).Value;
+        category = Category.Create("Test", TransactionType.Expense).Value;
 
         var categoryProperty = typeof(Transaction).GetProperty(nameof(Transaction.Category));
         categoryProperty?.SetValue(transaction, category);

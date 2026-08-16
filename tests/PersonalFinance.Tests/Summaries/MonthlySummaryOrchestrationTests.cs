@@ -8,7 +8,7 @@ namespace PersonalFinance.Tests.Summaries;
 [TestClass]
 public sealed class MonthlySummaryOrchestrationTests
 {
-    private static readonly BudgetMonth March2025 = new(2025, 3);
+    private static readonly BudgetMonth March2025 = BudgetMonth.Create(2025, 3).Value;
 
     private readonly ITransactionRepository _transactions = A.Fake<ITransactionRepository>();
     private readonly IBudgetRepository _budgets = A.Fake<IBudgetRepository>();
@@ -26,7 +26,7 @@ public sealed class MonthlySummaryOrchestrationTests
             });
 
         A.CallTo(() => _budgets.ListForMonthAsync(March2025, A<CancellationToken>._))
-            .Returns(new[] { Budget.Create(rentId, March2025, 800m) });
+            .Returns(new[] { Budget.Create(rentId, March2025, 800m).Value });
 
         var service = new MonthlySummaryService(_transactions, _budgets);
 

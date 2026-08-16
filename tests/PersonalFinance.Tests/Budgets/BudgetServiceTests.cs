@@ -2,7 +2,6 @@ using AutoFixture;
 using FakeItEasy;
 using PersonalFinance.Application.Abstractions;
 using PersonalFinance.Application.Budgets;
-using PersonalFinance.Application.Common;
 using PersonalFinance.Domain;
 
 namespace PersonalFinance.Tests.Budgets;
@@ -10,7 +9,7 @@ namespace PersonalFinance.Tests.Budgets;
 [TestClass]
 public sealed class BudgetServiceTests
 {
-    private static readonly BudgetMonth March2025 = new(2025, 3);
+    private static readonly BudgetMonth March2025 = BudgetMonth.Create(2025, 3).Value;
 
     private readonly Fixture _fixture = new();
     private readonly IBudgetRepository _budgets = A.Fake<IBudgetRepository>();
@@ -21,55 +20,60 @@ public sealed class BudgetServiceTests
     private BudgetService CreateSut() => new(_budgets, _categories, _transactions, _unitOfWork);
 
     [TestMethod]
-    public async Task CreateAsync_WhenCategoryIsUnknown_ThrowsNotFound()
+    public async Task CreateAsync_WhenCategoryIsUnknown_ReturnsNotFound()
     {
         A.CallTo(() => _categories.GetAsync(A<Guid>._, A<CancellationToken>._)).Returns<Category?>(null);
 
         var request = new CreateBudgetRequest(Guid.CreateVersion7(), 2025, 3, 300m);
 
-        await Assert.ThrowsExactlyAsync<NotFoundException>(
-            () => CreateSut().CreateAsync(request, CancellationToken.None));
+        Result<BudgetDto> result = await CreateSut().CreateAsync(request, CancellationToken.None);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.NotFound, result.Error!.Type);
     }
 
     [TestMethod]
-    public async Task CreateAsync_ForAnIncomeCategory_ThrowsConflict()
+    public async Task CreateAsync_ForAnIncomeCategory_ReturnsConflict()
     {
-        Category salary = Category.Create("Salary", TransactionType.Income);
+        Category salary = Category.Create("Salary", TransactionType.Income).Value;
         A.CallTo(() => _categories.GetAsync(salary.Id, A<CancellationToken>._)).Returns(salary);
 
         var request = new CreateBudgetRequest(salary.Id, 2025, 3, 300m);
 
-        await Assert.ThrowsExactlyAsync<ConflictException>(
-            () => CreateSut().CreateAsync(request, CancellationToken.None));
+        Result<BudgetDto> result = await CreateSut().CreateAsync(request, CancellationToken.None);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Conflict, result.Error!.Type);
     }
 
     [TestMethod]
-    public async Task CreateAsync_WhenABudgetAlreadyExistsForTheMonth_ThrowsConflict()
+    public async Task CreateAsync_WhenABudgetAlreadyExistsForTheMonth_ReturnsConflict()
     {
-        Category rent = Category.Create("Rent", TransactionType.Expense);
+        Category rent = Category.Create("Rent", TransactionType.Expense).Value;
         A.CallTo(() => _categories.GetAsync(rent.Id, A<CancellationToken>._)).Returns(rent);
         A.CallTo(() => _budgets.GetForCategoryAndMonthAsync(rent.Id, March2025, A<CancellationToken>._))
-            .Returns(Budget.Create(rent.Id, March2025, 900m));
+            .Returns(Budget.Create(rent.Id, March2025, 900m).Value);
 
         var request = new CreateBudgetRequest(rent.Id, 2025, 3, 300m);
 
-        await Assert.ThrowsExactlyAsync<ConflictException>(
-            () => CreateSut().CreateAsync(request, CancellationToken.None));
+        Result<BudgetDto> result = await CreateSut().CreateAsync(request, CancellationToken.None);
 
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Conflict, result.Error!.Type);
         A.CallTo(() => _unitOfWork.SaveChangesAsync(A<CancellationToken>._)).MustNotHaveHappened();
     }
 
     [TestMethod]
     public async Task CreateAsync_ForANewExpenseCategoryBudget_PersistsAndReturnsIt()
     {
-        Category groceries = Category.Create("Groceries", TransactionType.Expense);
+        Category groceries = Category.Create("Groceries", TransactionType.Expense).Value;
         A.CallTo(() => _categories.GetAsync(groceries.Id, A<CancellationToken>._)).Returns(groceries);
         A.CallTo(() => _budgets.GetForCategoryAndMonthAsync(groceries.Id, March2025, A<CancellationToken>._))
             .Returns<Budget?>(null);
 
         var request = new CreateBudgetRequest(groceries.Id, 2025, 3, 300m);
 
-        BudgetDto created = await CreateSut().CreateAsync(request, CancellationToken.None);
+        BudgetDto created = (await CreateSut().CreateAsync(request, CancellationToken.None)).Value;
 
         Assert.AreEqual(groceries.Id, created.CategoryId);
         Assert.AreEqual("Groceries", created.CategoryName);
@@ -85,34 +89,39 @@ public sealed class BudgetServiceTests
     [TestMethod]
     public async Task CreateAsync_WithANonPositiveLimit_IsRejectedByTheDomain()
     {
-        Category rent = Category.Create("Rent", TransactionType.Expense);
+        Category rent = Category.Create("Rent", TransactionType.Expense).Value;
         A.CallTo(() => _categories.GetAsync(rent.Id, A<CancellationToken>._)).Returns(rent);
         A.CallTo(() => _budgets.GetForCategoryAndMonthAsync(rent.Id, March2025, A<CancellationToken>._))
             .Returns<Budget?>(null);
 
         var request = new CreateBudgetRequest(rent.Id, 2025, 3, 0m);
 
-        await Assert.ThrowsExactlyAsync<DomainValidationException>(
-            () => CreateSut().CreateAsync(request, CancellationToken.None));
+        Result<BudgetDto> result = await CreateSut().CreateAsync(request, CancellationToken.None);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
-    public async Task UpdateAsync_WhenTheBudgetIsUnknown_ThrowsNotFound()
+    public async Task UpdateAsync_WhenTheBudgetIsUnknown_ReturnsNotFound()
     {
         A.CallTo(() => _budgets.GetAsync(A<Guid>._, A<CancellationToken>._)).Returns<Budget?>(null);
 
-        await Assert.ThrowsExactlyAsync<NotFoundException>(
-            () => CreateSut().UpdateAsync(Guid.CreateVersion7(), new UpdateBudgetRequest(100m), CancellationToken.None));
+        Result<BudgetDto> result = await CreateSut()
+            .UpdateAsync(Guid.CreateVersion7(), new UpdateBudgetRequest(100m), CancellationToken.None);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.NotFound, result.Error!.Type);
     }
 
     [TestMethod]
     public async Task UpdateAsync_ChangesTheLimitAndSaves()
     {
-        Budget budget = Budget.Create(Guid.CreateVersion7(), March2025, 300m);
+        Budget budget = Budget.Create(Guid.CreateVersion7(), March2025, 300m).Value;
         A.CallTo(() => _budgets.GetAsync(budget.Id, A<CancellationToken>._)).Returns(budget);
 
-        BudgetDto updated = await CreateSut()
-            .UpdateAsync(budget.Id, new UpdateBudgetRequest(450m), CancellationToken.None);
+        BudgetDto updated = (await CreateSut()
+            .UpdateAsync(budget.Id, new UpdateBudgetRequest(450m), CancellationToken.None)).Value;
 
         Assert.AreEqual(450m, updated.Limit);
         Assert.AreEqual(450m, budget.Limit);
@@ -136,7 +145,7 @@ public sealed class BudgetServiceTests
     public async Task CompareAsync_CombinesBudgetsWithTheActualSpendingOfTheMonth()
     {
         Guid categoryId = Guid.CreateVersion7();
-        Budget budget = Budget.Create(categoryId, March2025, 300m);
+        Budget budget = Budget.Create(categoryId, March2025, 300m).Value;
 
         A.CallTo(() => _budgets.ListForMonthAsync(March2025, A<CancellationToken>._)).Returns(new[] { budget });
         A.CallTo(() => _transactions.GetMonthlyTotalsByCategoryAsync(March2025, A<CancellationToken>._))
@@ -149,11 +158,13 @@ public sealed class BudgetServiceTests
     }
 
     [TestMethod]
-    public async Task DeleteAsync_WhenTheBudgetIsUnknown_ThrowsNotFound()
+    public async Task DeleteAsync_WhenTheBudgetIsUnknown_ReturnsNotFound()
     {
         A.CallTo(() => _budgets.GetAsync(A<Guid>._, A<CancellationToken>._)).Returns<Budget?>(null);
 
-        await Assert.ThrowsExactlyAsync<NotFoundException>(
-            () => CreateSut().DeleteAsync(_fixture.Create<Guid>(), CancellationToken.None));
+        Result result = await CreateSut().DeleteAsync(_fixture.Create<Guid>(), CancellationToken.None);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.NotFound, result.Error!.Type);
     }
 }

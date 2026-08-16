@@ -4,18 +4,8 @@ namespace PersonalFinance.Domain;
 
 public readonly record struct BudgetMonth : IComparable<BudgetMonth>
 {
-    public BudgetMonth(int year, int month)
+    private BudgetMonth(int year, int month)
     {
-        if (year is < 1 or > 9999)
-        {
-            throw new DomainValidationException($"Year must be between 1 and 9999 but was {year}.");
-        }
-
-        if (month is < 1 or > 12)
-        {
-            throw new DomainValidationException($"Month must be between 1 and 12 but was {month}.");
-        }
-
         Year = year;
         Month = month;
     }
@@ -27,6 +17,21 @@ public readonly record struct BudgetMonth : IComparable<BudgetMonth>
     public DateOnly FirstDay => new(Year, Month, 1);
 
     public DateOnly LastDay => new(Year, Month, DateTime.DaysInMonth(Year, Month));
+
+    public static Result<BudgetMonth> Create(int year, int month)
+    {
+        if (year is < 1 or > 9999)
+        {
+            return Error.Validation($"Year must be between 1 and 9999 but was {year}.");
+        }
+
+        if (month is < 1 or > 12)
+        {
+            return Error.Validation($"Month must be between 1 and 12 but was {month}.");
+        }
+
+        return new BudgetMonth(year, month);
+    }
 
     public static BudgetMonth FromDate(DateOnly date) => new(date.Year, date.Month);
 

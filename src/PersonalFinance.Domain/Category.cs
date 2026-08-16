@@ -22,33 +22,33 @@ public sealed class Category
 
     public TransactionType Type { get; private set; }
 
-    public static Category Create(string name, TransactionType type) =>
-        new(Guid.CreateVersion7(), NormalizeName(name), ValidateType(type));
+    public static Result<Category> Create(string name, TransactionType type) =>
+        Validate(name, type).Map(validName => new Category(Guid.CreateVersion7(), validName, type));
 
-    public void Update(string name, TransactionType type)
-    {
-        Name = NormalizeName(name);
-        Type = ValidateType(type);
-    }
+    public Result Update(string name, TransactionType type) =>
+        Validate(name, type).Bind(validName =>
+        {
+            Name = validName;
+            Type = type;
+            return Result.Success();
+        });
 
-    private static string NormalizeName(string name)
+    private static Result<string> Validate(string name, TransactionType type) =>
+        NormalizeName(name).Ensure(_ => Enum.IsDefined(type), Error.Validation($"Unknown transaction type '{type}'."));
+
+    private static Result<string> NormalizeName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new DomainValidationException("Category name must not be empty.");
+            return Error.Validation("Category name must not be empty.");
         }
 
         string trimmed = name.Trim();
         if (trimmed.Length > MaxNameLength)
         {
-            throw new DomainValidationException($"Category name must not exceed {MaxNameLength} characters.");
+            return Error.Validation($"Category name must not exceed {MaxNameLength} characters.");
         }
 
         return trimmed;
     }
-
-    private static TransactionType ValidateType(TransactionType type) =>
-        Enum.IsDefined(type)
-            ? type
-            : throw new DomainValidationException($"Unknown transaction type '{type}'.");
 }

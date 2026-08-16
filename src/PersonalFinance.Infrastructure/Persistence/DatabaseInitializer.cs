@@ -28,10 +28,10 @@ public static class DatabaseInitializer
 
         logger.LogInformation("Seeding default categories.");
         context.Categories.AddRange(
-            Category.Create("Salary", TransactionType.Income),
-            Category.Create("Groceries", TransactionType.Expense),
-            Category.Create("Rent", TransactionType.Expense),
-            Category.Create("Leisure", TransactionType.Expense));
+            Category.Create("Salary", TransactionType.Income).Value,
+            Category.Create("Groceries", TransactionType.Expense).Value,
+            Category.Create("Rent", TransactionType.Expense).Value,
+            Category.Create("Leisure", TransactionType.Expense).Value);
 
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }

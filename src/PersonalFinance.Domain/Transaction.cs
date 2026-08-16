@@ -33,45 +33,49 @@ public sealed class Transaction
     public TransactionType Type => Category?.Type
         ?? throw new InvalidOperationException("The category of the transaction has not been loaded.");
 
-    public static Transaction Create(string description, decimal amount, DateOnly date, Guid categoryId) =>
-        new(Guid.CreateVersion7(), NormalizeDescription(description), ValidateAmount(amount), date, ValidateCategoryId(categoryId));
+    public static Result<Transaction> Create(string description, decimal amount, DateOnly date, Guid categoryId) =>
+        Validate(description, amount, categoryId).Map(valid =>
+            new Transaction(Guid.CreateVersion7(), valid.Description, valid.Amount, date, categoryId));
 
-    public void Update(string description, decimal amount, DateOnly date, Guid categoryId)
-    {
-        Description = NormalizeDescription(description);
-        Amount = ValidateAmount(amount);
-        Date = date;
-        CategoryId = ValidateCategoryId(categoryId);
-
-        if (Category is not null && Category.Id != categoryId)
+    public Result Update(string description, decimal amount, DateOnly date, Guid categoryId) =>
+        Validate(description, amount, categoryId).Bind(valid =>
         {
-            Category = null;
-        }
-    }
+            Description = valid.Description;
+            Amount = valid.Amount;
+            Date = date;
+            CategoryId = categoryId;
 
-    private static string NormalizeDescription(string description)
+            if (Category is not null && Category.Id != categoryId)
+            {
+                Category = null;
+            }
+
+            return Result.Success();
+        });
+
+    private static Result<(string Description, decimal Amount)> Validate(string description, decimal amount, Guid categoryId) =>
+        NormalizeDescription(description)
+            .Bind(validDescription => ValidateAmount(amount).Map(validAmount => (validDescription, validAmount)))
+            .Ensure(_ => categoryId != Guid.Empty, Error.Validation("Transaction must be assigned to a category."));
+
+    private static Result<string> NormalizeDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
         {
-            throw new DomainValidationException("Transaction description must not be empty.");
+            return Error.Validation("Transaction description must not be empty.");
         }
 
         string trimmed = description.Trim();
         if (trimmed.Length > MaxDescriptionLength)
         {
-            throw new DomainValidationException($"Transaction description must not exceed {MaxDescriptionLength} characters.");
+            return Error.Validation($"Transaction description must not exceed {MaxDescriptionLength} characters.");
         }
 
         return trimmed;
     }
 
-    private static decimal ValidateAmount(decimal amount) =>
+    private static Result<decimal> ValidateAmount(decimal amount) =>
         amount > 0m
             ? decimal.Round(amount, 2, MidpointRounding.AwayFromZero)
-            : throw new DomainValidationException("Transaction amount must be greater than zero.");
-
-    private static Guid ValidateCategoryId(Guid categoryId) =>
-        categoryId != Guid.Empty
-            ? categoryId
-            : throw new DomainValidationException("Transaction must be assigned to a category.");
+            : Error.Validation("Transaction amount must be greater than zero.");
 }

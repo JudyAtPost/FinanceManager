@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using PersonalFinance.Application.Common;
-using PersonalFinance.Domain;
 
 namespace PersonalFinance.Api;
 
@@ -27,9 +25,7 @@ public sealed class ExceptionToProblemDetailsHandler : IExceptionHandler
 
         (int statusCode, string title) = exception switch
         {
-            NotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
-            ConflictException => (StatusCodes.Status409Conflict, "Request conflicts with the current state"),
-            DomainValidationException or ArgumentException => (StatusCodes.Status400BadRequest, "Invalid request"),
+            ArgumentException => (StatusCodes.Status400BadRequest, "Invalid request"),
             _ => (StatusCodes.Status500InternalServerError, "Unexpected error")
         };
 

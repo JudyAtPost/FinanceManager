@@ -24,18 +24,25 @@ public sealed class Budget
 
     public decimal Limit { get; private set; }
 
-    public static Budget Create(Guid categoryId, BudgetMonth month, decimal limit) =>
-        new(Guid.CreateVersion7(), ValidateCategoryId(categoryId), month, ValidateLimit(limit));
+    public static Result<Budget> Create(Guid categoryId, BudgetMonth month, decimal limit) =>
+        ValidateCategoryId(categoryId)
+            .Bind(() => ValidateLimit(limit))
+            .Map(validLimit => new Budget(Guid.CreateVersion7(), categoryId, month, validLimit));
 
-    public void ChangeLimit(decimal limit) => Limit = ValidateLimit(limit);
+    public Result ChangeLimit(decimal limit) =>
+        ValidateLimit(limit).Bind(validLimit =>
+        {
+            Limit = validLimit;
+            return Result.Success();
+        });
 
-    private static decimal ValidateLimit(decimal limit) =>
+    private static Result<decimal> ValidateLimit(decimal limit) =>
         limit > 0m
             ? decimal.Round(limit, 2, MidpointRounding.AwayFromZero)
-            : throw new DomainValidationException("Budget limit must be greater than zero.");
+            : Error.Validation("Budget limit must be greater than zero.");
 
-    private static Guid ValidateCategoryId(Guid categoryId) =>
+    private static Result ValidateCategoryId(Guid categoryId) =>
         categoryId != Guid.Empty
-            ? categoryId
-            : throw new DomainValidationException("Budget must be assigned to a category.");
+            ? Result.Success()
+            : Error.Validation("Budget must be assigned to a category.");
 }

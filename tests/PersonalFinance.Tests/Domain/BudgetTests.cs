@@ -9,12 +9,12 @@ namespace PersonalFinance.Tests.Domain;
 public sealed class BudgetTests
 {
     private static readonly Guid ValidCategoryId = Guid.CreateVersion7();
-    private static readonly BudgetMonth ValidMonth = new(2025, 3);
+    private static readonly BudgetMonth ValidMonth = BudgetMonth.Create(2025, 3).Value;
 
     [TestMethod]
     public void Create_WithValidValues_Succeeds()
     {
-        Budget budget = Budget.Create(ValidCategoryId, ValidMonth, 300m);
+        Budget budget = Budget.Create(ValidCategoryId, ValidMonth, 300m).Value;
 
         Assert.AreEqual(ValidCategoryId, budget.CategoryId);
         Assert.AreEqual(ValidMonth, budget.Month);
@@ -23,39 +23,47 @@ public sealed class BudgetTests
     }
 
     [TestMethod]
-    public void Create_WithAnEmptyCategoryId_ThrowsDomainValidationException()
+    public void Create_WithAnEmptyCategoryId_ReturnsValidationError()
     {
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => Budget.Create(Guid.Empty, ValidMonth, 300m));
+        Result<Budget> result = Budget.Create(Guid.Empty, ValidMonth, 300m);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
-    public void Create_WithZeroLimit_ThrowsDomainValidationException()
+    public void Create_WithZeroLimit_ReturnsValidationError()
     {
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => Budget.Create(ValidCategoryId, ValidMonth, 0m));
+        Result<Budget> result = Budget.Create(ValidCategoryId, ValidMonth, 0m);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
-    public void Create_WithNegativeOneLimit_ThrowsDomainValidationException()
+    public void Create_WithNegativeOneLimit_ReturnsValidationError()
     {
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => Budget.Create(ValidCategoryId, ValidMonth, -1m));
+        Result<Budget> result = Budget.Create(ValidCategoryId, ValidMonth, -1m);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
-    public void Create_WithANegativeDecimalLimit_ThrowsDomainValidationException()
+    public void Create_WithANegativeDecimalLimit_ReturnsValidationError()
     {
         decimal limit = -100.50m;
 
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => Budget.Create(ValidCategoryId, ValidMonth, limit));
+        Result<Budget> result = Budget.Create(ValidCategoryId, ValidMonth, limit);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
     public void Create_RoundsLimitToTwoDecimals()
     {
-        Budget budget = Budget.Create(ValidCategoryId, ValidMonth, 300.555m);
+        Budget budget = Budget.Create(ValidCategoryId, ValidMonth, 300.555m).Value;
 
         Assert.AreEqual(300.56m, budget.Limit);
     }
@@ -63,7 +71,7 @@ public sealed class BudgetTests
     [TestMethod]
     public void ChangeLimit_UpdatesTheLimit()
     {
-        Budget budget = Budget.Create(ValidCategoryId, ValidMonth, 300m);
+        Budget budget = Budget.Create(ValidCategoryId, ValidMonth, 300m).Value;
 
         budget.ChangeLimit(400m);
 
@@ -71,12 +79,14 @@ public sealed class BudgetTests
     }
 
     [TestMethod]
-    public void ChangeLimit_WithANonPositiveLimit_ThrowsDomainValidationException()
+    public void ChangeLimit_WithANonPositiveLimit_ReturnsValidationError()
     {
-        Budget budget = Budget.Create(ValidCategoryId, ValidMonth, 300m);
+        Budget budget = Budget.Create(ValidCategoryId, ValidMonth, 300m).Value;
 
-        Assert.ThrowsExactly<DomainValidationException>(
-            () => budget.ChangeLimit(0m));
+        Result result = budget.ChangeLimit(0m);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 }
 
@@ -90,9 +100,9 @@ public sealed class BudgetMonthTests
     [DataRow(1)]
     [DataRow(2025)]
     [DataRow(9999)]
-    public void Constructor_WithAValidYear_Succeeds(int year)
+    public void Create_WithAValidYear_Succeeds(int year)
     {
-        BudgetMonth month = new(year, 6);
+        BudgetMonth month = BudgetMonth.Create(year, 6).Value;
 
         Assert.AreEqual(year, month.Year);
     }
@@ -101,18 +111,21 @@ public sealed class BudgetMonthTests
     [DataRow(0)]
     [DataRow(-1)]
     [DataRow(10000)]
-    public void Constructor_WithAnInvalidYear_ThrowsDomainValidationException(int year)
+    public void Create_WithAnInvalidYear_ReturnsValidationError(int year)
     {
-        Assert.ThrowsExactly<DomainValidationException>(() => new BudgetMonth(year, 6));
+        Result<BudgetMonth> result = BudgetMonth.Create(year, 6);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
     [DataRow(1)]
     [DataRow(6)]
     [DataRow(12)]
-    public void Constructor_WithAValidMonth_Succeeds(int month)
+    public void Create_WithAValidMonth_Succeeds(int month)
     {
-        BudgetMonth budgetMonth = new(2025, month);
+        BudgetMonth budgetMonth = BudgetMonth.Create(2025, month).Value;
 
         Assert.AreEqual(month, budgetMonth.Month);
     }
@@ -122,9 +135,12 @@ public sealed class BudgetMonthTests
     [DataRow(-1)]
     [DataRow(13)]
     [DataRow(100)]
-    public void Constructor_WithAnInvalidMonth_ThrowsDomainValidationException(int month)
+    public void Create_WithAnInvalidMonth_ReturnsValidationError(int month)
     {
-        Assert.ThrowsExactly<DomainValidationException>(() => new BudgetMonth(2025, month));
+        Result<BudgetMonth> result = BudgetMonth.Create(2025, month);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
     }
 
     [TestMethod]
@@ -145,7 +161,7 @@ public sealed class BudgetMonthTests
     [DataRow(2026, 3, 1, false)]
     public void Contains_ChecksIfDateBelongsToMonth(int year, int month, int day, bool expected)
     {
-        BudgetMonth budgetMonth = new(2025, 3);
+        BudgetMonth budgetMonth = BudgetMonth.Create(2025, 3).Value;
         DateOnly date = new(year, month, day);
 
         Assert.AreEqual(expected, budgetMonth.Contains(date));
@@ -154,7 +170,7 @@ public sealed class BudgetMonthTests
     [TestMethod]
     public void FirstDay_ReturnsTheFirstDayOfTheMonth()
     {
-        BudgetMonth month = new(2025, 3);
+        BudgetMonth month = BudgetMonth.Create(2025, 3).Value;
 
         Assert.AreEqual(new DateOnly(2025, 3, 1), month.FirstDay);
     }
@@ -162,7 +178,7 @@ public sealed class BudgetMonthTests
     [TestMethod]
     public void LastDay_ReturnsTheLastDayOfTheMonth()
     {
-        BudgetMonth month = new(2025, 3);
+        BudgetMonth month = BudgetMonth.Create(2025, 3).Value;
 
         Assert.AreEqual(new DateOnly(2025, 3, 31), month.LastDay);
     }
@@ -170,8 +186,8 @@ public sealed class BudgetMonthTests
     [TestMethod]
     public void LastDay_HandlesFebruary()
     {
-        BudgetMonth nonLeapYear = new(2025, 2);
-        BudgetMonth leapYear = new(2024, 2);
+        BudgetMonth nonLeapYear = BudgetMonth.Create(2025, 2).Value;
+        BudgetMonth leapYear = BudgetMonth.Create(2024, 2).Value;
 
         Assert.AreEqual(new DateOnly(2025, 2, 28), nonLeapYear.LastDay);
         Assert.AreEqual(new DateOnly(2024, 2, 29), leapYear.LastDay);
@@ -180,7 +196,7 @@ public sealed class BudgetMonthTests
     [TestMethod]
     public void ToString_FormatsAsYyyyMm()
     {
-        BudgetMonth month = new(2025, 3);
+        BudgetMonth month = BudgetMonth.Create(2025, 3).Value;
 
         Assert.AreEqual("2025-03", month.ToString());
     }
@@ -189,14 +205,14 @@ public sealed class BudgetMonthTests
     [TestMethod]
     public void CompareTo_OrdersMonthsChronologically()
     {
-        BudgetMonth march2025 = new(2025, 3);
-        BudgetMonth april2025 = new(2025, 4);
-        BudgetMonth march2026 = new(2026, 3);
+        BudgetMonth march2025 = BudgetMonth.Create(2025, 3).Value;
+        BudgetMonth april2025 = BudgetMonth.Create(2025, 4).Value;
+        BudgetMonth march2026 = BudgetMonth.Create(2026, 3).Value;
 
         Assert.IsTrue(march2025.CompareTo(april2025) < 0);
         Assert.IsTrue(april2025.CompareTo(march2025) > 0);
         Assert.IsTrue(march2025.CompareTo(march2026) < 0);
-        Assert.AreEqual(0, march2025.CompareTo(new BudgetMonth(2025, 3)));
+        Assert.AreEqual(0, march2025.CompareTo(BudgetMonth.Create(2025, 3).Value));
     }
 #pragma warning restore MSTEST0037
 }

@@ -8,7 +8,7 @@ namespace PersonalFinance.Tests.Summaries;
 [TestClass]
 public sealed class MonthlySummaryServiceTests
 {
-    private static readonly BudgetMonth March2025 = new(2025, 3);
+    private static readonly BudgetMonth March2025 = BudgetMonth.Create(2025, 3).Value;
 
     private static readonly Guid SalaryId = Guid.CreateVersion7();
     private static readonly Guid RentId = Guid.CreateVersion7();
@@ -114,7 +114,7 @@ public sealed class MonthlySummaryServiceTests
     [TestMethod]
     public void Build_IncludesTheBudgetComparisonOfTheMonth()
     {
-        Budget rentBudget = Budget.Create(RentId, March2025, 800m);
+        Budget rentBudget = Budget.Create(RentId, March2025, 800m).Value;
 
         MonthlySummary summary = MonthlySummaryService.Build(March2025, SampleTotals, [rentBudget]);
 
