@@ -20,16 +20,11 @@ public static class TransactionEndpoints
                 int? pageSize,
                 TransactionService service,
                 CancellationToken cancellationToken) =>
-            {
-                Result<BudgetMonth?> budgetMonth = ResolveMonth(year, month);
-                if (budgetMonth.IsFailure)
+                await ResolveMonth(year, month).Match(async budgetMonth =>
                 {
-                    return budgetMonth.Error!.ToProblem();
-                }
-
-                var query = new TransactionQuery(budgetMonth.Value, categoryId, type, page ?? 1, pageSize ?? 50);
-                return Results.Ok(await service.ListAsync(query, cancellationToken));
-            })
+                    var query = new TransactionQuery(budgetMonth, categoryId, type, page ?? 1, pageSize ?? 50);
+                    return Results.Ok(await service.ListAsync(query, cancellationToken));
+                }))
             .WithName("ListTransactions")
             .WithSummary("Lists transactions, optionally filtered by month, category, and type.");
 

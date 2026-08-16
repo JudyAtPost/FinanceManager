@@ -14,12 +14,8 @@ public static class SummaryEndpoints
                 int month,
                 MonthlySummaryService service,
                 CancellationToken cancellationToken) =>
-            {
-                Result<BudgetMonth> budgetMonth = BudgetMonth.Create(year, month);
-                return budgetMonth.IsFailure
-                    ? budgetMonth.Error!.ToProblem()
-                    : Results.Ok(await service.GetAsync(budgetMonth.Value, cancellationToken));
-            })
+                await BudgetMonth.Create(year, month)
+                    .Match(async budgetMonth => Results.Ok(await service.GetAsync(budgetMonth, cancellationToken))))
             .WithTags("Summary")
             .WithName("GetMonthlySummary")
             .WithSummary("Returns totals, the category breakdown, budget comparison, and the top expense category of a month.");

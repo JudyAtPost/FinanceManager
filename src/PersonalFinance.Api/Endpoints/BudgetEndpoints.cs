@@ -12,28 +12,14 @@ public static class BudgetEndpoints
         RouteGroupBuilder group = app.MapGroup("/api/budgets").WithTags("Budgets");
 
         group.MapGet("/", async (int year, int month, BudgetService service, CancellationToken cancellationToken) =>
-            {
-                Result<BudgetMonth> budgetMonth = BudgetMonth.Create(year, month);
-                if (budgetMonth.IsFailure)
-                {
-                    return budgetMonth.Error!.ToProblem();
-                }
-
-                return Results.Ok(await service.ListAsync(budgetMonth.Value, cancellationToken));
-            })
+                await BudgetMonth.Create(year, month)
+                    .Match(async budgetMonth => Results.Ok(await service.ListAsync(budgetMonth, cancellationToken))))
             .WithName("ListBudgets")
             .WithSummary("Lists the budgets defined for one month.");
 
         group.MapGet("/comparison", async (int year, int month, BudgetService service, CancellationToken cancellationToken) =>
-            {
-                Result<BudgetMonth> budgetMonth = BudgetMonth.Create(year, month);
-                if (budgetMonth.IsFailure)
-                {
-                    return budgetMonth.Error!.ToProblem();
-                }
-
-                return Results.Ok(await service.CompareAsync(budgetMonth.Value, cancellationToken));
-            })
+                await BudgetMonth.Create(year, month)
+                    .Match(async budgetMonth => Results.Ok(await service.CompareAsync(budgetMonth, cancellationToken))))
             .WithName("CompareBudgets")
             .WithSummary("Compares the budgets of one month against actual spending.");
 
