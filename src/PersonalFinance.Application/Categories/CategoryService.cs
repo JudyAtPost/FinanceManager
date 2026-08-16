@@ -1,4 +1,5 @@
 using PersonalFinance.Application.Abstractions;
+using PersonalFinance.Application.Common;
 using PersonalFinance.Domain;
 
 namespace PersonalFinance.Application.Categories;
@@ -20,69 +21,41 @@ public sealed class CategoryService
         return [.. categories.Select(CategoryDto.FromDomain)];
     }
 
-    public async Task<Result<CategoryDto>> GetAsync(Guid id, CancellationToken cancellationToken)
-    {
-        Category? category = await _categories.GetAsync(id, cancellationToken).ConfigureAwait(false);
-        if (category is null)
-        {
-            return Error.NotFound($"Category '{id}' was not found.");
-        }
-
-        return CategoryDto.FromDomain(category);
-    }
+    public async Task<Result<CategoryDto>> GetAsync(Guid id, CancellationToken cancellationToken) =>
+        await FindAsync(id, cancellationToken).Map(CategoryDto.FromDomain).ConfigureAwait(false);
 
     public async Task<Result<CategoryDto>> CreateAsync(SaveCategoryRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        Result<Category> category = Category.Create(request.Name, request.Type);
-        if (category.IsFailure)
-        {
-            return category.Error!;
-        }
-
-        _categories.Add(category.Value);
-        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        return CategoryDto.FromDomain(category.Value);
+        return await Category.Create(request.Name, request.Type)
+            .Tap(_categories.Add)
+            .SaveAsync(_unitOfWork, cancellationToken)
+            .Map(CategoryDto.FromDomain)
+            .ConfigureAwait(false);
     }
 
     public async Task<Result<CategoryDto>> UpdateAsync(Guid id, SaveCategoryRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        Category? category = await _categories.GetAsync(id, cancellationToken).ConfigureAwait(false);
-        if (category is null)
-        {
-            return Error.NotFound($"Category '{id}' was not found.");
-        }
-
-        Result update = category.Update(request.Name, request.Type);
-        if (update.IsFailure)
-        {
-            return update.Error!;
-        }
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        return CategoryDto.FromDomain(category);
+        return await FindAsync(id, cancellationToken)
+            .Bind(category => category.Update(request.Name, request.Type).Map(() => category))
+            .SaveAsync(_unitOfWork, cancellationToken)
+            .Map(CategoryDto.FromDomain)
+            .ConfigureAwait(false);
     }
 
-    public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken)
-    {
-        Category? category = await _categories.GetAsync(id, cancellationToken).ConfigureAwait(false);
-        if (category is null)
-        {
-            return Error.NotFound($"Category '{id}' was not found.");
-        }
+    public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken) =>
+        await FindAsync(id, cancellationToken)
+            .Bind(async category => (await _categories.IsInUseAsync(id, cancellationToken).ConfigureAwait(false))
+                ? Error.Conflict($"Category '{category.Name}' is still used by transactions or budgets.")
+                : Result.Success<Category>(category))
+            .Tap(_categories.Remove)
+            .SaveAsync(_unitOfWork, cancellationToken)
+            .ToResult()
+            .ConfigureAwait(false);
 
-        if (await _categories.IsInUseAsync(id, cancellationToken).ConfigureAwait(false))
-        {
-            return Error.Conflict($"Category '{category.Name}' is still used by transactions or budgets.");
-        }
-
-        _categories.Remove(category);
-        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return Result.Success();
-    }
+    private Task<Result<Category>> FindAsync(Guid id, CancellationToken cancellationToken) =>
+        _categories.GetAsync(id, cancellationToken).Require(Error.NotFound($"Category '{id}' was not found."));
 }

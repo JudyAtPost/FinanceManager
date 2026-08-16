@@ -1,4 +1,5 @@
 using PersonalFinance.Application.Abstractions;
+using PersonalFinance.Application.Common;
 using PersonalFinance.Domain;
 
 namespace PersonalFinance.Application.Budgets;
@@ -32,73 +33,56 @@ public sealed class BudgetService
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        Category? category = await _categories.GetAsync(request.CategoryId, cancellationToken).ConfigureAwait(false);
-        if (category is null)
-        {
-            return Error.NotFound($"Category '{request.CategoryId}' was not found.");
-        }
-
-        if (category.Type != TransactionType.Expense)
-        {
-            return Error.Conflict("Budgets can only be defined for expense categories.");
-        }
-
-        Result<BudgetMonth> month = BudgetMonth.Create(request.Year, request.Month);
-        if (month.IsFailure)
-        {
-            return month.Error!;
-        }
-
-        Budget? existing = await _budgets.GetForCategoryAndMonthAsync(request.CategoryId, month.Value, cancellationToken).ConfigureAwait(false);
-        if (existing is not null)
-        {
-            return Error.Conflict($"A budget for category '{category.Name}' already exists for {month.Value}.");
-        }
-
-        Result<Budget> budget = Budget.Create(request.CategoryId, month.Value, request.Limit);
-        if (budget.IsFailure)
-        {
-            return budget.Error!;
-        }
-
-        _budgets.Add(budget.Value);
-        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        return new BudgetDto(budget.Value.Id, category.Id, category.Name, month.Value.Year, month.Value.Month, budget.Value.Limit);
+        return await FindCategoryAsync(request.CategoryId, cancellationToken)
+            .Bind(category => category.Type == TransactionType.Expense
+                ? Result.Success(category)
+                : Error.Conflict("Budgets can only be defined for expense categories."))
+            .Bind(category => BudgetMonth.Create(request.Year, request.Month).Map(month => (category, month)))
+            .Bind(pair => EnsureUniqueAsync(request.CategoryId, pair.category, pair.month, cancellationToken))
+            .Bind(pair => Budget
+                .Create(request.CategoryId, pair.month, request.Limit)
+                .Map(budget => (budget, pair.category, pair.month)))
+            .Tap(result => _budgets.Add(result.budget))
+            .SaveAsync(_unitOfWork, cancellationToken)
+            .Map(result => new BudgetDto(
+                result.budget.Id, result.category.Id, result.category.Name, result.month.Year, result.month.Month, result.budget.Limit))
+            .ConfigureAwait(false);
     }
 
     public async Task<Result<BudgetDto>> UpdateAsync(Guid id, UpdateBudgetRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        Budget? budget = await _budgets.GetAsync(id, cancellationToken).ConfigureAwait(false);
-        if (budget is null)
-        {
-            return Error.NotFound($"Budget '{id}' was not found.");
-        }
-
-        Result changeLimit = budget.ChangeLimit(request.Limit);
-        if (changeLimit.IsFailure)
-        {
-            return changeLimit.Error!;
-        }
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        return BudgetDto.FromDomain(budget);
+        return await FindBudgetAsync(id, cancellationToken)
+            .Bind(budget => budget.ChangeLimit(request.Limit).Map(() => budget))
+            .SaveAsync(_unitOfWork, cancellationToken)
+            .Map(BudgetDto.FromDomain)
+            .ConfigureAwait(false);
     }
 
-    public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken)
-    {
-        Budget? budget = await _budgets.GetAsync(id, cancellationToken).ConfigureAwait(false);
-        if (budget is null)
-        {
-            return Error.NotFound($"Budget '{id}' was not found.");
-        }
+    public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken) =>
+        await FindBudgetAsync(id, cancellationToken)
+            .Tap(_budgets.Remove)
+            .SaveAsync(_unitOfWork, cancellationToken)
+            .ToResult()
+            .ConfigureAwait(false);
 
-        _budgets.Remove(budget);
-        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return Result.Success();
+    private Task<Result<Budget>> FindBudgetAsync(Guid id, CancellationToken cancellationToken) =>
+        _budgets.GetAsync(id, cancellationToken).Require(Error.NotFound($"Budget '{id}' was not found."));
+
+    private Task<Result<Category>> FindCategoryAsync(Guid id, CancellationToken cancellationToken) =>
+        _categories.GetAsync(id, cancellationToken).Require(Error.NotFound($"Category '{id}' was not found."));
+
+    private async Task<Result<(Category category, BudgetMonth month)>> EnsureUniqueAsync(
+        Guid categoryId,
+        Category category,
+        BudgetMonth month,
+        CancellationToken cancellationToken)
+    {
+        Budget? existing = await _budgets.GetForCategoryAndMonthAsync(categoryId, month, cancellationToken).ConfigureAwait(false);
+        return existing is null
+            ? (category, month)
+            : Error.Conflict($"A budget for category '{category.Name}' already exists for {month}.");
     }
 
     public async Task<IReadOnlyList<BudgetComparison>> CompareAsync(BudgetMonth month, CancellationToken cancellationToken)

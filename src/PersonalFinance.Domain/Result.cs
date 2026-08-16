@@ -55,6 +55,10 @@ public class Result
     /// <summary>Produces a value from a successful result, or propagates the failure.</summary>
     public Result<TValue> Bind<TValue>(Func<Result<TValue>> next) =>
         IsFailure ? Error! : next();
+
+    /// <summary>Projects a successful valueless result onto <paramref name="value"/>.</summary>
+    public Result<TValue> Map<TValue>(Func<TValue> value) =>
+        IsFailure ? Error! : value();
 }
 
 /// <summary>
