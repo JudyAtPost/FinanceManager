@@ -1,5 +1,5 @@
 using PersonalFinance.Domain;
 
-namespace PersonalFinance.Application.Abstractions;
+namespace PersonalFinance.Application.Common;
 
 public sealed record CategoryTotal(Guid CategoryId, string CategoryName, TransactionType Type, decimal Total);

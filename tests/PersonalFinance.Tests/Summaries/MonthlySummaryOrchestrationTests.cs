@@ -1,5 +1,6 @@
 using FakeItEasy;
 using PersonalFinance.Application.Abstractions;
+using PersonalFinance.Application.Common;
 using PersonalFinance.Application.Summaries;
 using PersonalFinance.Domain;
 
