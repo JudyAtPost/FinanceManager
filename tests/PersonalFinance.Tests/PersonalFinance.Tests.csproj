@@ -22,4 +22,8 @@
     <ProjectReference Include="..\..\src\PersonalFinance.Api\PersonalFinance.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Repositories\" />
+  </ItemGroup>
+
 </Project>
