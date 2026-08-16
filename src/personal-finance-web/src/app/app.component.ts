@@ -26,7 +26,7 @@ import { FinanceApiService } from './finance-api.service';
 
       <p class="error" *ngIf="error">{{ error }}</p>
 
-      <pf-monthly-summary [summary]="summary"></pf-monthly-summary>
+      <pf-monthly-summary [summary]="summary" [previousSummary]="previousSummary"></pf-monthly-summary>
 
       <pf-transactions
         #transactions
@@ -59,6 +59,7 @@ export class AppComponent implements OnInit {
 
   categories: Category[] = [];
   summary: MonthlySummary | null = null;
+  previousSummary: MonthlySummary | null = null;
   error = '';
 
   get monthValue(): string {
@@ -95,6 +96,16 @@ export class AppComponent implements OnInit {
       },
       error: (err) => (this.error = err?.error?.detail ?? 'Could not load the monthly summary.')
     });
+
+    const { year: previousYear, month: previousMonth } = this.previousMonth();
+    this.api.getSummary(previousYear, previousMonth).subscribe({
+      next: (summary) => (this.previousSummary = summary),
+      error: () => (this.previousSummary = null)
+    });
+  }
+
+  private previousMonth(): { year: number; month: number } {
+    return this.month === 1 ? { year: this.year - 1, month: 12 } : { year: this.year, month: this.month - 1 };
   }
 
   private loadCategories(): void {

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Category, PagedResult, Transaction, TransactionType } from '../api.models';
+import { categoryColor } from '../category-color';
 import { FinanceApiService } from '../finance-api.service';
 
 @Component({
@@ -56,28 +57,19 @@ import { FinanceApiService } from '../finance-api.service';
 
       <p class="error" *ngIf="error">{{ error }}</p>
 
-      <table *ngIf="page && page.items.length; else empty">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Category</th>
-            <th>Type</th>
-            <th class="amount">Amount</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let transaction of page.items">
-            <td>{{ transaction.date }}</td>
-            <td>{{ transaction.description }}</td>
-            <td>{{ transaction.categoryName }}</td>
-            <td><span class="badge">{{ transaction.type }}</span></td>
-            <td class="amount">{{ transaction.amount | currency: 'EUR' }}</td>
-            <td><button type="button" class="ghost" (click)="remove(transaction)">Delete</button></td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="tx-feed" *ngIf="page && page.items.length; else empty">
+        <div class="tx-row" *ngFor="let transaction of page.items">
+          <div class="tx-dot" [style.background]="dotColor(transaction.categoryName)"></div>
+          <div class="tx-main">
+            <div class="tx-description">{{ transaction.description }}</div>
+            <div class="tx-meta muted">{{ transaction.date }} &middot; {{ transaction.categoryName }}</div>
+          </div>
+          <div class="tx-amount" [class.income]="transaction.type === 'Income'" [class.expense]="transaction.type === 'Expense'">
+            {{ transaction.type === 'Income' ? '+' : '-' }}{{ transaction.amount | currency: 'EUR' }}
+          </div>
+          <button type="button" class="ghost" (click)="remove(transaction)">Delete</button>
+        </div>
+      </div>
       <ng-template #empty><p class="muted">No transactions for this filter.</p></ng-template>
 
       <div class="toolbar" *ngIf="page && page.totalPages > 1">
@@ -116,6 +108,10 @@ export class TransactionsComponent implements OnChanges {
 
   canAdd(): boolean {
     return this.description.trim().length > 0 && (this.amount ?? 0) > 0 && !!this.categoryId;
+  }
+
+  dotColor(categoryName: string): string {
+    return categoryColor(categoryName);
   }
 
   goTo(page: number): void {
