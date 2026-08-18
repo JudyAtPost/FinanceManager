@@ -4,3 +4,7 @@
 /out-tsc
 /.angular
 npm-debug.log*
+
+# Locally-trusted CA certs for Docker builds behind corporate TLS-inspecting proxies (e.g. Zscaler)
+docker-certs/*
+!docker-certs/.gitkeep
