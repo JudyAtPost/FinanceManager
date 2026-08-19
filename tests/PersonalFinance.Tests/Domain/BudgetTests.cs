@@ -144,6 +144,67 @@ public sealed class BudgetMonthTests
     }
 
     [TestMethod]
+    public void CreateOptional_WithBothYearAndMonthNull_SucceedsWithNull()
+    {
+        Result<BudgetMonth?> result = BudgetMonth.CreateOptional(null, null);
+
+        Assert.IsTrue(result.IsSuccess);
+        Assert.IsNull(result.Value);
+    }
+
+    [TestMethod]
+    public void CreateOptional_WithOnlyYearProvided_SucceedsWithNull()
+    {
+        Result<BudgetMonth?> result = BudgetMonth.CreateOptional(2025, null);
+
+        Assert.IsTrue(result.IsSuccess);
+        Assert.IsNull(result.Value);
+    }
+
+    [TestMethod]
+    public void CreateOptional_WithOnlyMonthProvided_SucceedsWithNull()
+    {
+        Result<BudgetMonth?> result = BudgetMonth.CreateOptional(null, 6);
+
+        Assert.IsTrue(result.IsSuccess);
+        Assert.IsNull(result.Value);
+    }
+
+    [TestMethod]
+    public void CreateOptional_WithValidYearAndMonth_SucceedsWithValue()
+    {
+        Result<BudgetMonth?> result = BudgetMonth.CreateOptional(2025, 3);
+
+        Assert.IsTrue(result.IsSuccess);
+        Assert.AreEqual(2025, result.Value!.Value.Year);
+        Assert.AreEqual(3, result.Value!.Value.Month);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(-1)]
+    [DataRow(10000)]
+    public void CreateOptional_WithAnInvalidYear_ReturnsValidationError(int year)
+    {
+        Result<BudgetMonth?> result = BudgetMonth.CreateOptional(year, 6);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(-1)]
+    [DataRow(13)]
+    public void CreateOptional_WithAnInvalidMonth_ReturnsValidationError(int month)
+    {
+        Result<BudgetMonth?> result = BudgetMonth.CreateOptional(2025, month);
+
+        Assert.IsTrue(result.IsFailure);
+        Assert.AreEqual(ErrorType.Validation, result.Error!.Type);
+    }
+
+    [TestMethod]
     public void FromDate_CreatesMonthFromDate()
     {
         BudgetMonth month = BudgetMonth.FromDate(new DateOnly(2025, 3, 14));

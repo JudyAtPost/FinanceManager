@@ -33,6 +33,16 @@ public readonly record struct BudgetMonth : IComparable<BudgetMonth>
         return new BudgetMonth(year, month);
     }
 
+    public static Result<BudgetMonth?> CreateOptional(int? year, int? month)
+    {
+        if (year is null || month is null)
+        {
+            return Result.Success<BudgetMonth?>(null);
+        }
+
+        return Create(year.Value, month.Value).Map(value => (BudgetMonth?)value);
+    }
+
     public static BudgetMonth FromDate(DateOnly date) => new(date.Year, date.Month);
 
     public bool Contains(DateOnly date) => date.Year == Year && date.Month == Month;

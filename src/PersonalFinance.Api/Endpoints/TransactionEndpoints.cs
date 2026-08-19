@@ -16,7 +16,7 @@ public static class TransactionEndpoints
                 [AsParameters] TransactionFilter filter,
                 TransactionService service,
                 CancellationToken cancellationToken) =>
-                await ResolveMonth(filter.Year, filter.Month)
+                await BudgetMonth.CreateOptional(filter.Year, filter.Month)
                     .Bind(budgetMonth => TransactionQuery.Create(
                         budgetMonth, filter.CategoryId, filter.Type, filter.Page, filter.PageSize))
                     .Match(async query => Results.Ok(await service.ListAsync(query, cancellationToken))))
@@ -45,16 +45,6 @@ public static class TransactionEndpoints
             .WithSummary("Deletes a transaction.");
 
         return app;
-    }
-
-    private static Result<BudgetMonth?> ResolveMonth(int? year, int? month)
-    {
-        if (year is null || month is null)
-        {
-            return Result.Success<BudgetMonth?>(null);
-        }
-
-        return BudgetMonth.Create(year.Value, month.Value).Map(value => (BudgetMonth?)value);
     }
 
     private readonly record struct TransactionFilter(
