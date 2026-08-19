@@ -4,6 +4,10 @@
     <Project Path="src/PersonalFinance.Application/PersonalFinance.Application.csproj" />
     <Project Path="src/PersonalFinance.Domain/PersonalFinance.Domain.csproj" />
     <Project Path="src/PersonalFinance.Infrastructure/PersonalFinance.Infrastructure.csproj" />
+    <Folder Name="/src/personal-finance-web/">
+      <File Path="src/personal-finance-web/angular.json" />
+      <File Path="src/personal-finance-web/package.json" />
+    </Folder>
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PersonalFinance.Tests/PersonalFinance.Tests.csproj" />
