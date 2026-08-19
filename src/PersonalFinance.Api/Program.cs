@@ -48,6 +48,6 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
 	.WithTags("Health")
 	.WithName("GetHealth");
 
-await DatabaseInitializer.InitializeAsync(app.Services);
+await DatabaseInitializer.InitializeAsync(app.Services, seedSampleData: app.Environment.IsDevelopment());
 
 await app.RunAsync();

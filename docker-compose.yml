@@ -22,7 +22,7 @@ services:
       dockerfile: src/PersonalFinance.Api/Dockerfile
     container_name: personalfinance-api
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__PersonalFinance: "Host=db;Port=5432;Database=personalfinance;Username=postgres;Password=postgres"
       Cors__AllowedOrigins__0: "http://localhost:4200"
       Cors__AllowedOrigins__1: "http://localhost:8081"

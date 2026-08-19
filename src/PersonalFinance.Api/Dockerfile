@@ -1,6 +1,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /source
 
+# Trust any corporate CA certs dropped in docker-certs/ (e.g. for TLS-inspecting proxies). No-op if empty.
+COPY docker-certs/ /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
 COPY Directory.Build.props NuGet.config ./
 COPY src/PersonalFinance.Domain/PersonalFinance.Domain.csproj src/PersonalFinance.Domain/
 COPY src/PersonalFinance.Application/PersonalFinance.Application.csproj src/PersonalFinance.Application/

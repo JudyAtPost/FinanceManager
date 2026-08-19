@@ -1,0 +1,32 @@
+<main class="container">
+  <h1>Personal Finance</h1>
+  <p class="subtitle">Track income and expenses, set monthly budgets, and see where the money went.</p>
+
+  <div class="card toolbar">
+    <div class="field">
+      <label class="label" for="month">Month</label>
+      <input id="month" type="month" [ngModel]="monthValue" (ngModelChange)="onMonthChange($event)" />
+    </div>
+    <button type="button" (click)="refresh()">Refresh</button>
+  </div>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+
+  <pf-monthly-summary [summary]="summary" [previousSummary]="previousSummary"></pf-monthly-summary>
+
+  <pf-transactions
+    #transactions
+    [year]="year"
+    [month]="month"
+    [categories]="categories"
+    (changed)="loadSummary()"
+  ></pf-transactions>
+
+  <pf-budgets
+    #budgets
+    [year]="year"
+    [month]="month"
+    [categories]="categories"
+    (changed)="loadSummary()"
+  ></pf-budgets>
+</main>

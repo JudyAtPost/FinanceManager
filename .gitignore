@@ -480,3 +480,7 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Locally-trusted CA certs for Docker builds behind corporate TLS-inspecting proxies (e.g. Zscaler)
+docker-certs/*
+!docker-certs/.gitkeep
