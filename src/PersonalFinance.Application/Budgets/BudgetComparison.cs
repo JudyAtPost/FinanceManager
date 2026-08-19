@@ -1,3 +1,5 @@
+using PersonalFinance.Domain;
+
 namespace PersonalFinance.Application.Budgets;
 
 public sealed record BudgetComparison(Guid CategoryId, string CategoryName, decimal Limit, decimal Spent)
@@ -8,5 +10,5 @@ public sealed record BudgetComparison(Guid CategoryId, string CategoryName, deci
 
     public bool IsOverBudget => Spent > Limit;
 
-    public decimal UsagePercentage => Limit <= 0m ? 0m : decimal.Round(Spent / Limit * 100m, 2, MidpointRounding.AwayFromZero);
+    public decimal UsagePercentage => Money.Percentage(Spent, Limit);
 }

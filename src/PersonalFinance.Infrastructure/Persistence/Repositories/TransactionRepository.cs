@@ -30,11 +30,11 @@ public sealed class TransactionRepository : ITransactionRepository
             .OrderByDescending(transaction => transaction.Date)
             .ThenByDescending(transaction => transaction.Id)
             .Skip(query.Skip)
-            .Take(query.NormalizedPageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return new PagedResult<Transaction>(items, totalCount, query.NormalizedPage, query.NormalizedPageSize);
+        return new PagedResult<Transaction>(items, totalCount, query.Page, query.PageSize);
     }
 
     public async Task<Transaction?> GetAsync(Guid id, CancellationToken cancellationToken) =>

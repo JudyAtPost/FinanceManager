@@ -12,16 +12,14 @@ public static class TransactionEndpoints
 
         RouteGroupBuilder group = app.MapGroup("/api/transactions").WithTags("Transactions");
 
-        group.MapGet("/", async (
+        group.MapGet("", async (
                 [AsParameters] TransactionFilter filter,
                 TransactionService service,
                 CancellationToken cancellationToken) =>
-                await ResolveMonth(filter.Year, filter.Month).Match(async budgetMonth =>
-                {
-                    var query = new TransactionQuery(
-                        budgetMonth, filter.CategoryId, filter.Type, filter.Page ?? 1, filter.PageSize ?? 50);
-                    return Results.Ok(await service.ListAsync(query, cancellationToken));
-                }))
+                await ResolveMonth(filter.Year, filter.Month)
+                    .Bind(budgetMonth => TransactionQuery.Create(
+                        budgetMonth, filter.CategoryId, filter.Type, filter.Page, filter.PageSize))
+                    .Match(async query => Results.Ok(await service.ListAsync(query, cancellationToken))))
             .WithName("ListTransactions")
             .WithSummary("Lists transactions, optionally filtered by month, category, and type.");
 

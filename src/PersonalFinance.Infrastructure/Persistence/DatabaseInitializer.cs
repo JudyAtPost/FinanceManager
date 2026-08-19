@@ -12,6 +12,14 @@ public static class DatabaseInitializer
 
     private const int SampleDataMonthCount = 6;
 
+    /// <summary>
+    /// Applies pending migrations and, optionally, seeds sample data.
+    /// </summary>
+    /// <remarks>
+    /// Migrating on startup suits this single-user app: the container can be brought up with nothing
+    /// but a database and the schema is ready. A multi-instance deployment would move this into a
+    /// separate migration step to avoid concurrent migrators racing each other.
+    /// </remarks>
     public static async Task InitializeAsync(
         IServiceProvider services,
         bool seedSampleData = false,
@@ -29,12 +37,22 @@ public static class DatabaseInitializer
         logger.LogInformation("Applying database migrations.");
         await context.Database.MigrateAsync(cancellationToken).ConfigureAwait(false);
 
-        if (await context.Categories.AnyAsync(cancellationToken).ConfigureAwait(false))
+        if (!seedSampleData)
         {
             return;
         }
 
-        logger.LogInformation("Seeding default categories.");
+        bool alreadySeeded = await context.Categories
+            .AnyAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (alreadySeeded)
+        {
+            return;
+        }
+
+        logger.LogInformation("Seeding sample data.");
+
         Category salary = Category.Create("Salary", TransactionType.Income).Value;
         Category groceries = Category.Create("Groceries", TransactionType.Expense).Value;
         Category rent = Category.Create("Rent", TransactionType.Expense).Value;
@@ -43,11 +61,8 @@ public static class DatabaseInitializer
         context.Categories.AddRange(salary, groceries, rent, leisure);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        if (seedSampleData)
-        {
-            logger.LogInformation("Seeding sample transactions and budgets for the last {MonthCount} months.", SampleDataMonthCount);
-            await SeedSampleDataAsync(context, salary, groceries, rent, leisure, cancellationToken).ConfigureAwait(false);
-        }
+        logger.LogInformation("Seeding sample transactions and budgets for the last {MonthCount} months.", SampleDataMonthCount);
+        await SeedSampleDataAsync(context, salary, groceries, rent, leisure, cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task SeedSampleDataAsync(
@@ -133,11 +148,11 @@ public static class DatabaseInitializer
             _ => random.NextDouble() * 0.5 + 1.05        // 1.05 - 1.55: comfortably within budget
         };
 
-        decimal limit = Math.Max(1m, Math.Round(actualSpend * (decimal)factor, 2, MidpointRounding.AwayFromZero));
+        decimal limit = Math.Max(1m, Money.Round(actualSpend * (decimal)factor));
 
         context.Budgets.Add(Budget.Create(categoryId, month, limit).Value);
     }
 
     private static decimal RandomAmount(Random random, int minAmount, int maxAmount) =>
-        Math.Round((decimal)(random.NextDouble() * (maxAmount - minAmount) + minAmount), 2, MidpointRounding.AwayFromZero);
+        Money.Round((decimal)(random.NextDouble() * (maxAmount - minAmount) + minAmount));
 }

@@ -18,6 +18,9 @@ public sealed class BudgetServiceTests
     private readonly ITransactionRepository _transactions = A.Fake<ITransactionRepository>();
     private readonly IUnitOfWork _unitOfWork = A.Fake<IUnitOfWork>();
 
+    public BudgetServiceTests() =>
+        A.CallTo(() => _unitOfWork.SaveChangesAsync(A<CancellationToken>._)).Returns(Result.Success());
+
     private BudgetService CreateSut() => new(_budgets, _categories, _transactions, _unitOfWork);
 
     [TestMethod]

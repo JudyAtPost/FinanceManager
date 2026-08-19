@@ -29,6 +29,7 @@ public sealed class BudgetConfiguration : IEntityTypeConfiguration<Budget>
             .HasForeignKey(budget => budget.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // One budget per category and month.
         builder.HasIndex(budget => new { budget.CategoryId, budget.Month }).IsUnique();
     }
 }

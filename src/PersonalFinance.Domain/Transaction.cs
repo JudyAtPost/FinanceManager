@@ -34,8 +34,8 @@ public sealed class Transaction
         ?? throw new InvalidOperationException("The category of the transaction has not been loaded.");
 
     public static Result<Transaction> Create(string description, decimal amount, DateOnly date, Guid categoryId) =>
-        Validate(description, amount, categoryId).Map(valid =>
-            new Transaction(Guid.CreateVersion7(), valid.Description, valid.Amount, date, categoryId));
+        Validate(description, amount, categoryId)
+            .Map(valid => new Transaction(Guid.CreateVersion7(), valid.Description, valid.Amount, date, categoryId));
 
     public Result Update(string description, decimal amount, DateOnly date, Guid categoryId) =>
         Validate(description, amount, categoryId).Bind(valid =>
@@ -44,11 +44,6 @@ public sealed class Transaction
             Amount = valid.Amount;
             Date = date;
             CategoryId = categoryId;
-
-            if (Category is not null && Category.Id != categoryId)
-            {
-                Category = null;
-            }
 
             return Result.Success();
         });
@@ -76,6 +71,6 @@ public sealed class Transaction
 
     private static Result<decimal> ValidateAmount(decimal amount) =>
         amount > 0m
-            ? decimal.Round(amount, 2, MidpointRounding.AwayFromZero)
+            ? Money.Round(amount)
             : Error.Validation("Transaction amount must be greater than zero.");
 }

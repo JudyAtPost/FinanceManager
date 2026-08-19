@@ -67,6 +67,13 @@ public class Result
 /// <typeparam name="TValue">The type of the produced value.</typeparam>
 public sealed class Result<TValue> : Result
 {
+    /// <summary>
+    /// True when <typeparamref name="TValue"/> is a reference type, so a <c>null</c> success value
+    /// would violate the non-nullable contract of <see cref="Value"/>. Nullable value types such as
+    /// <c>BudgetMonth?</c> are intentionally allowed to carry <c>null</c>.
+    /// </summary>
+    private static readonly bool RejectsNullValue = !typeof(TValue).IsValueType;
+
     private readonly TValue? _value;
 
     private Result(bool isSuccess, TValue? value, Error? error)
@@ -78,7 +85,18 @@ public sealed class Result<TValue> : Result
         : throw new InvalidOperationException("Cannot access the value of a failed result.");
 
     /// <summary>Creates a successful result carrying a value.</summary>
-    public static Result<TValue> Success(TValue value) => new(true, value, null);
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="value"/> is <c>null</c> and <typeparamref name="TValue"/> is a reference type.
+    /// </exception>
+    public static Result<TValue> Success(TValue value)
+    {
+        if (RejectsNullValue && value is null)
+        {
+            throw new ArgumentNullException(nameof(value), "A successful result cannot carry a null value.");
+        }
+
+        return new(true, value, null);
+    }
 
     /// <summary>Creates a failed result.</summary>
     public static new Result<TValue> Failure(Error error) => new(false, default, error);

@@ -35,7 +35,7 @@ public sealed class TransactionRepositoryTests
         await context.SaveChangesAsync(CancellationToken.None);
 
         var sut = new TransactionRepository(context);
-        var query = new TransactionQuery(Month: BudgetMonth.Create(2025, 3).Value);
+        TransactionQuery query = TransactionQuery.Create(month: BudgetMonth.Create(2025, 3).Value).Value;
 
         PagedResult<Transaction> result = await sut.ListAsync(query, CancellationToken.None);
 
@@ -57,7 +57,7 @@ public sealed class TransactionRepositoryTests
         await context.SaveChangesAsync(CancellationToken.None);
 
         var sut = new TransactionRepository(context);
-        var query = new TransactionQuery(CategoryId: groceries.Id);
+        TransactionQuery query = TransactionQuery.Create(categoryId: groceries.Id).Value;
 
         PagedResult<Transaction> result = await sut.ListAsync(query, CancellationToken.None);
 
@@ -79,7 +79,7 @@ public sealed class TransactionRepositoryTests
         await context.SaveChangesAsync(CancellationToken.None);
 
         var sut = new TransactionRepository(context);
-        var query = new TransactionQuery(Type: TransactionType.Income);
+        TransactionQuery query = TransactionQuery.Create(type: TransactionType.Income).Value;
 
         PagedResult<Transaction> result = await sut.ListAsync(query, CancellationToken.None);
 
@@ -101,7 +101,7 @@ public sealed class TransactionRepositoryTests
         await context.SaveChangesAsync(CancellationToken.None);
 
         var sut = new TransactionRepository(context);
-        var query = new TransactionQuery(Page: 1, PageSize: 2);
+        TransactionQuery query = TransactionQuery.Create(page: 1, pageSize: 2).Value;
 
         PagedResult<Transaction> result = await sut.ListAsync(query, CancellationToken.None);
 

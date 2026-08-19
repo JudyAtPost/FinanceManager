@@ -1,6 +1,8 @@
+using PersonalFinance.Domain;
+
 namespace PersonalFinance.Application.Abstractions;
 
 public interface IUnitOfWork
 {
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+    Task<Result> SaveChangesAsync(CancellationToken cancellationToken);
 }

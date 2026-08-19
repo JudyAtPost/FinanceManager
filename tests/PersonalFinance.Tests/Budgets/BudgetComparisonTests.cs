@@ -17,7 +17,7 @@ public sealed class BudgetComparisonTests
         Budget budget = Budget.Create(categoryId, BudgetMonth.Create(2025, 3).Value, 300m).Value;
         CategoryTotal total = new(categoryId, "Rent", TransactionType.Expense, 310m);
 
-        BudgetComparison comparison = BudgetService.Compare([budget], [total]).Single();
+        BudgetComparison comparison = BudgetComparisonCalculator.Compare([budget], [total]).Single();
 
         Assert.IsTrue(comparison.IsOverBudget);
         Assert.AreEqual(10m, comparison.OverspentBy);
@@ -33,7 +33,7 @@ public sealed class BudgetComparisonTests
         Budget budget = Budget.Create(categoryId, BudgetMonth.Create(2025, 3).Value, 400m).Value;
         CategoryTotal total = new(categoryId, "Groceries", TransactionType.Expense, 250m);
 
-        BudgetComparison comparison = BudgetService.Compare([budget], [total]).Single();
+        BudgetComparison comparison = BudgetComparisonCalculator.Compare([budget], [total]).Single();
 
         Assert.IsFalse(comparison.IsOverBudget);
         Assert.AreEqual(0m, comparison.OverspentBy);
@@ -48,7 +48,7 @@ public sealed class BudgetComparisonTests
         Budget budget = Budget.Create(categoryId, BudgetMonth.Create(2025, 3).Value, 200m).Value;
         CategoryTotal total = new(categoryId, "Leisure", TransactionType.Expense, 200m);
 
-        BudgetComparison comparison = BudgetService.Compare([budget], [total]).Single();
+        BudgetComparison comparison = BudgetComparisonCalculator.Compare([budget], [total]).Single();
 
         Assert.IsFalse(comparison.IsOverBudget);
         Assert.AreEqual(0m, comparison.OverspentBy);
@@ -61,7 +61,7 @@ public sealed class BudgetComparisonTests
     {
         Budget budget = Budget.Create(Guid.CreateVersion7(), BudgetMonth.Create(2025, 3).Value, _fixture.Create<decimal>() + 1m).Value;
 
-        BudgetComparison comparison = BudgetService.Compare([budget], []).Single();
+        BudgetComparison comparison = BudgetComparisonCalculator.Compare([budget], []).Single();
 
         Assert.AreEqual(0m, comparison.Spent);
         Assert.IsFalse(comparison.IsOverBudget);
@@ -75,7 +75,7 @@ public sealed class BudgetComparisonTests
         Budget budget = Budget.Create(categoryId, BudgetMonth.Create(2025, 3).Value, 100m).Value;
         CategoryTotal income = new(categoryId, "Salary", TransactionType.Income, 2500m);
 
-        BudgetComparison comparison = BudgetService.Compare([budget], [income]).Single();
+        BudgetComparison comparison = BudgetComparisonCalculator.Compare([budget], [income]).Single();
 
         Assert.AreEqual(0m, comparison.Spent);
         Assert.IsFalse(comparison.IsOverBudget);
@@ -103,7 +103,7 @@ public sealed class BudgetComparisonTests
             new(heavilyOver, "Rent", TransactionType.Expense, 900m)
         ];
 
-        IReadOnlyList<BudgetComparison> comparisons = BudgetService.Compare(budgets, totals);
+        IReadOnlyList<BudgetComparison> comparisons = BudgetComparisonCalculator.Compare(budgets, totals);
 
         CollectionAssert.AreEqual(
             new[] { heavilyOver, slightlyOver, withinBudget },
@@ -122,7 +122,7 @@ public sealed class BudgetComparisonTests
             new(categoryId, "Groceries", TransactionType.Expense, 55m)
         ];
 
-        BudgetComparison comparison = BudgetService.Compare([budget], totals).Single();
+        BudgetComparison comparison = BudgetComparisonCalculator.Compare([budget], totals).Single();
 
         Assert.AreEqual(115m, comparison.Spent);
         Assert.AreEqual(15m, comparison.OverspentBy);

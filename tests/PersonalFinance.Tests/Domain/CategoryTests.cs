@@ -61,22 +61,23 @@ public sealed class CategoryTests
     }
 
     [TestMethod]
-    public void Update_ChangesTheNameAndType()
+    public void RenameAndChangeType_UpdateTheCategory()
     {
         Category category = Category.Create("Groceries", TransactionType.Expense).Value;
 
-        category.Update("Food", TransactionType.Income);
+        category.Rename("Food");
+        category.ChangeType(TransactionType.Income);
 
         Assert.AreEqual("Food", category.Name);
         Assert.AreEqual(TransactionType.Income, category.Type);
     }
 
     [TestMethod]
-    public void Update_WithABlankName_ReturnsValidationError()
+    public void Rename_WithABlankName_ReturnsValidationError()
     {
         Category category = Category.Create("Groceries", TransactionType.Expense).Value;
 
-        Result result = category.Update("", TransactionType.Expense);
+        Result result = category.Rename("");
 
         Assert.IsTrue(result.IsFailure);
         Assert.AreEqual(ErrorType.Validation, result.Error!.Type);

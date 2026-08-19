@@ -21,6 +21,7 @@ public sealed class FinanceDbContext : DbContext
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FinanceDbContext).Assembly);
+
         base.OnModelCreating(modelBuilder);
     }
 }

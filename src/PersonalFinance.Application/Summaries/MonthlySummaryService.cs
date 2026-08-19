@@ -64,10 +64,9 @@ public sealed class MonthlySummaryService
             totalIncome,
             totalExpenses,
             breakdown,
-            BudgetService.Compare(budgets, totals),
+            BudgetComparisonCalculator.Compare(budgets, totals),
             topExpense);
     }
 
-    private static decimal Share(decimal value, decimal total) =>
-        total <= 0m ? 0m : decimal.Round(value / total * 100m, 2, MidpointRounding.AwayFromZero);
+    private static decimal Share(decimal value, decimal total) => Money.Percentage(value, total);
 }

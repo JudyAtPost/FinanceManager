@@ -112,31 +112,4 @@ public sealed class TransactionTests
         Assert.AreEqual(new DateOnly(2025, 3, 2), transaction.Date);
         Assert.AreEqual(newCategoryId, transaction.CategoryId);
     }
-
-    [TestMethod]
-    public void Update_ClearsTheCategoryNavigationWhenIdChanges()
-    {
-        TransactionReflection.SetCategoryForTesting(out Transaction transaction, out _);
-        Guid newCategoryId = Guid.CreateVersion7();
-
-        transaction.Update("Test", 10m, new DateOnly(2025, 3, 1), newCategoryId);
-
-        Assert.IsNull(transaction.Category);
-    }
-}
-
-/// <summary>
-/// Reflection helper to test navigation property behavior without affecting normal code paths.
-/// </summary>
-internal static class TransactionReflection
-{
-    public static void SetCategoryForTesting(out Transaction transaction, out Category category)
-    {
-        Guid categoryId = Guid.CreateVersion7();
-        transaction = Transaction.Create("Test", 10m, new DateOnly(2025, 3, 1), categoryId).Value;
-        category = Category.Create("Test", TransactionType.Expense).Value;
-
-        var categoryProperty = typeof(Transaction).GetProperty(nameof(Transaction.Category));
-        categoryProperty?.SetValue(transaction, category);
-    }
 }

@@ -2,18 +2,62 @@ using PersonalFinance.Domain;
 
 namespace PersonalFinance.Application.Transactions;
 
-public sealed record TransactionQuery(
-    BudgetMonth? Month = null,
-    Guid? CategoryId = null,
-    TransactionType? Type = null,
-    int Page = 1,
-    int PageSize = 50)
+public sealed record TransactionQuery
 {
+    public const int DefaultPageSize = 50;
+
     public const int MaxPageSize = 200;
 
-    public int NormalizedPage => Page < 1 ? 1 : Page;
+    private TransactionQuery(BudgetMonth? month, Guid? categoryId, TransactionType? type, int page, int pageSize)
+    {
+        Month = month;
+        CategoryId = categoryId;
+        Type = type;
+        Page = page;
+        PageSize = pageSize;
+    }
 
-    public int NormalizedPageSize => Math.Clamp(PageSize < 1 ? 50 : PageSize, 1, MaxPageSize);
+    public BudgetMonth? Month { get; }
 
-    public int Skip => (NormalizedPage - 1) * NormalizedPageSize;
+    public Guid? CategoryId { get; }
+
+    public TransactionType? Type { get; }
+
+    public int Page { get; }
+
+    public int PageSize { get; }
+
+    public int Skip => (Page - 1) * PageSize;
+
+    public static Result<TransactionQuery> Create(
+        BudgetMonth? month = null,
+        Guid? categoryId = null,
+        TransactionType? type = null,
+        int? page = null,
+        int? pageSize = null)
+    {
+        int resolvedPage = page ?? 1;
+        if (resolvedPage < 1)
+        {
+            return Error.Validation($"Page must be 1 or greater but was {resolvedPage}.");
+        }
+
+        int resolvedPageSize = pageSize ?? DefaultPageSize;
+        if (resolvedPageSize < 1 || resolvedPageSize > MaxPageSize)
+        {
+            return Error.Validation($"Page size must be between 1 and {MaxPageSize} but was {resolvedPageSize}.");
+        }
+
+        if (categoryId == Guid.Empty)
+        {
+            return Error.Validation("Category filter must not be an empty identifier.");
+        }
+
+        if (type is not null && !Enum.IsDefined(type.Value))
+        {
+            return Error.Validation($"Unknown transaction type '{type}'.");
+        }
+
+        return new TransactionQuery(month, categoryId, type, resolvedPage, resolvedPageSize);
+    }
 }

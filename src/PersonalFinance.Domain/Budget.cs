@@ -38,7 +38,7 @@ public sealed class Budget
 
     private static Result<decimal> ValidateLimit(decimal limit) =>
         limit > 0m
-            ? decimal.Round(limit, 2, MidpointRounding.AwayFromZero)
+            ? Money.Round(limit)
             : Error.Validation("Budget limit must be greater than zero.");
 
     private static Result ValidateCategoryId(Guid categoryId) =>

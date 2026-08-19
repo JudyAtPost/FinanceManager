@@ -44,7 +44,7 @@ public static class ResultAsyncExtensions
     }
 
     /// <summary>Runs an async side effect on success, then propagates the original result.</summary>
-    public static async Task<Result<TValue>> Tap<TValue>(
+    public static async Task<Result<TValue>> TapAsync<TValue>(
         this Task<Result<TValue>> result,
         Func<TValue, Task> effect)
     {

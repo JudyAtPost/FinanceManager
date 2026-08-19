@@ -34,7 +34,7 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
             .HasForeignKey(transaction => transaction.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Listing and monthly summaries are always date-driven.
         builder.HasIndex(transaction => transaction.Date);
-        builder.HasIndex(transaction => transaction.CategoryId);
     }
 }

@@ -99,34 +99,6 @@ public sealed class BudgetService
             .GetMonthlyTotalsByCategoryAsync(month, cancellationToken)
             .ConfigureAwait(false);
 
-        return Compare(budgets, totals);
-    }
-
-    public static IReadOnlyList<BudgetComparison> Compare(
-        IReadOnlyList<Budget> budgets,
-        IReadOnlyList<CategoryTotal> totals)
-    {
-        ArgumentNullException.ThrowIfNull(budgets);
-        ArgumentNullException.ThrowIfNull(totals);
-
-        Dictionary<Guid, decimal> spentByCategory = totals
-            .Where(total => total.Type == TransactionType.Expense)
-            .GroupBy(total => total.CategoryId)
-            .ToDictionary(group => group.Key, group => group.Sum(total => total.Total));
-
-        return
-        [
-            .. budgets
-                .Select(budget => new BudgetComparison(
-                    budget.CategoryId,
-                    budget.Category?.Name
-                        ?? totals.FirstOrDefault(total => total.CategoryId == budget.CategoryId)?.CategoryName
-                        ?? string.Empty,
-                    budget.Limit,
-                    spentByCategory.GetValueOrDefault(budget.CategoryId)))
-                .OrderByDescending(comparison => comparison.OverspentBy)
-                .ThenByDescending(comparison => comparison.Spent)
-                .ThenBy(comparison => comparison.CategoryName, StringComparer.OrdinalIgnoreCase)
-        ];
+        return BudgetComparisonCalculator.Compare(budgets, totals);
     }
 }
