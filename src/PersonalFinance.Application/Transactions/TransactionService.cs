@@ -26,11 +26,7 @@ public sealed class TransactionService
     {
         PagedResult<Transaction> page = await _transactions.ListAsync(query, cancellationToken).ConfigureAwait(false);
 
-        return new PagedResult<TransactionDto>(
-            [.. page.Items.Select(TransactionDto.FromDomain)],
-            page.TotalCount,
-            page.Page,
-            page.PageSize);
+        return page.Map(TransactionDto.FromDomain);
     }
 
     public async Task<Result<TransactionDto>> GetAsync(Guid id, CancellationToken cancellationToken) =>

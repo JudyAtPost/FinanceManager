@@ -1,0 +1,56 @@
+<section class="card">
+  <h2>Categories</h2>
+
+  <form class="toolbar" (ngSubmit)="add()">
+    <div class="field">
+      <label class="label" for="category-name">Name</label>
+      <input id="category-name" name="name" type="text" [(ngModel)]="name" required />
+    </div>
+    <div class="field">
+      <label class="label" for="category-type">Type</label>
+      <select id="category-type" name="type" [(ngModel)]="type" required>
+        <option value="Expense">Expense</option>
+        <option value="Income">Income</option>
+      </select>
+    </div>
+    <button type="submit" [disabled]="!canAdd()">Add category</button>
+  </form>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+
+  <table *ngIf="categories.length; else empty">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let category of categories">
+        <ng-container *ngIf="editingId === category.id; else viewRow">
+          <td><input type="text" name="editName" [(ngModel)]="editName" required /></td>
+          <td>
+            <select name="editType" [(ngModel)]="editType" required>
+              <option value="Expense">Expense</option>
+              <option value="Income">Income</option>
+            </select>
+          </td>
+          <td>
+            <button type="button" [disabled]="!canSaveEdit()" (click)="saveEdit(category)">Save</button>
+            <button type="button" class="ghost" (click)="cancelEdit()">Cancel</button>
+          </td>
+        </ng-container>
+        <ng-template #viewRow>
+          <td>{{ category.name }}</td>
+          <td>{{ category.type }}</td>
+          <td>
+            <button type="button" class="ghost" (click)="startEdit(category)">Edit</button>
+            <button type="button" class="ghost" (click)="remove(category)">Delete</button>
+          </td>
+        </ng-template>
+      </tr>
+    </tbody>
+  </table>
+  <ng-template #empty><p class="muted">No categories yet.</p></ng-template>
+</section>

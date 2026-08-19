@@ -46,8 +46,7 @@ public sealed class BudgetService
                 .Map(budget => (budget, pair.category, pair.month)))
             .Tap(result => _budgets.Add(result.budget))
             .SaveAsync(_unitOfWork, cancellationToken)
-            .Map(result => new BudgetDto(
-                result.budget.Id, result.category.Id, result.category.Name, result.month.Year, result.month.Month, result.budget.Limit))
+            .Map(result => BudgetDto.FromDomain(result.budget, result.category))
             .ConfigureAwait(false);
     }
 

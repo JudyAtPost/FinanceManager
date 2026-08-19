@@ -27,6 +27,10 @@ export class FinanceApiService {
     return this.http.post<Category>(`${this.baseUrl}/api/categories`, request);
   }
 
+  updateCategory(id: string, request: SaveCategoryRequest): Observable<Category> {
+    return this.http.put<Category>(`${this.baseUrl}/api/categories/${id}`, request);
+  }
+
   deleteCategory(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/api/categories/${id}`);
   }

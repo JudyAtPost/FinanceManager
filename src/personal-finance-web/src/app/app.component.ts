@@ -3,6 +3,7 @@ import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Category, MonthlySummary } from './api.models';
 import { BudgetsComponent } from './components/budgets/budgets.component';
+import { CategoriesComponent } from './components/categories/categories.component';
 import { MonthlySummaryComponent } from './components/monthly-summary/monthly-summary.component';
 import { TransactionsComponent } from './components/transactions/transactions.component';
 import { FinanceApiService } from './finance-api.service';
@@ -10,7 +11,14 @@ import { FinanceApiService } from './finance-api.service';
 @Component({
   selector: 'pf-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, MonthlySummaryComponent, TransactionsComponent, BudgetsComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MonthlySummaryComponent,
+    TransactionsComponent,
+    BudgetsComponent,
+    CategoriesComponent
+  ],
   templateUrl: './app.component.html'
 })
 export class AppComponent implements OnInit {
@@ -53,6 +61,11 @@ export class AppComponent implements OnInit {
     this.loadSummary();
     this.transactions?.reload();
     this.budgets?.reload();
+  }
+
+  onCategoriesChanged(): void {
+    this.loadCategories();
+    this.refresh();
   }
 
   loadSummary(): void {

@@ -50,9 +50,7 @@ public sealed class CategoryService
 
     public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken) =>
         await FindAsync(id, cancellationToken)
-            .Bind(async category => (await _categories.IsInUseAsync(id, cancellationToken).ConfigureAwait(false))
-                ? Error.Conflict($"Category '{category.Name}' is still used by transactions or budgets.")
-                : Result.Success<Category>(category))
+            .Bind(category => EnsureNotInUseAsync(category, "be deleted", cancellationToken))
             .Tap(_categories.Remove)
             .SaveAsync(_unitOfWork, cancellationToken)
             .ToResult()
@@ -68,14 +66,15 @@ public sealed class CategoryService
             return category;
         }
 
-        if (await _categories.IsInUseAsync(category.Id, cancellationToken).ConfigureAwait(false))
-        {
-            return Error.Conflict(
-                $"Category '{category.Name}' is already used by transactions or budgets and can no longer change its type.");
-        }
-
-        return category.ChangeType(requestedType).Map(() => category);
+        return await EnsureNotInUseAsync(category, "change its type", cancellationToken)
+            .Bind(unused => category.ChangeType(requestedType).Map(() => category))
+            .ConfigureAwait(false);
     }
+
+    private async Task<Result<Category>> EnsureNotInUseAsync(Category category, string action, CancellationToken cancellationToken) =>
+        (await _categories.IsInUseAsync(category.Id, cancellationToken).ConfigureAwait(false))
+            ? Error.Conflict($"Category '{category.Name}' is already used by transactions or budgets and can no longer {action}.")
+            : category;
 
     private Task<Result<Category>> FindAsync(Guid id, CancellationToken cancellationToken) =>
         _categories.GetAsync(id, cancellationToken).Require(Error.NotFound($"Category '{id}' was not found."));

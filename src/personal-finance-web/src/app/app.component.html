@@ -14,6 +14,8 @@
 
   <pf-monthly-summary [summary]="summary" [previousSummary]="previousSummary"></pf-monthly-summary>
 
+  <pf-categories #categories (changed)="onCategoriesChanged()"></pf-categories>
+
   <pf-transactions
     #transactions
     [year]="year"

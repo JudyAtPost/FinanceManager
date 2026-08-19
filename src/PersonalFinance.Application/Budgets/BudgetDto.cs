@@ -16,6 +16,14 @@ public sealed record BudgetDto(Guid Id, Guid CategoryId, string CategoryName, in
             budget.Month.Month,
             budget.Limit);
     }
+
+    public static BudgetDto FromDomain(Budget budget, Category category)
+    {
+        ArgumentNullException.ThrowIfNull(budget);
+        ArgumentNullException.ThrowIfNull(category);
+
+        return new BudgetDto(budget.Id, category.Id, category.Name, budget.Month.Year, budget.Month.Month, budget.Limit);
+    }
 }
 
 public sealed record CreateBudgetRequest(Guid CategoryId, int Year, int Month, decimal Limit);
