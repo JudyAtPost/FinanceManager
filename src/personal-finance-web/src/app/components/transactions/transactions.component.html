@@ -1,0 +1,68 @@
+<section class="card">
+  <h2>Transactions</h2>
+
+  <div class="toolbar">
+    <div class="field">
+      <label class="label" for="filter-category">Category</label>
+      <select id="filter-category" [(ngModel)]="filterCategoryId" (change)="reload()">
+        <option value="">All categories</option>
+        <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="label" for="filter-type">Type</label>
+      <select id="filter-type" [(ngModel)]="filterType" (change)="reload()">
+        <option value="">Income and expenses</option>
+        <option value="Income">Income</option>
+        <option value="Expense">Expense</option>
+      </select>
+    </div>
+  </div>
+
+  <form class="toolbar" (ngSubmit)="add()">
+    <div class="field">
+      <label class="label" for="new-description">Description</label>
+      <input id="new-description" name="description" [(ngModel)]="description" required />
+    </div>
+    <div class="field">
+      <label class="label" for="new-amount">Amount</label>
+      <input id="new-amount" name="amount" type="number" step="0.01" min="0.01" [(ngModel)]="amount" required />
+    </div>
+    <div class="field">
+      <label class="label" for="new-date">Date</label>
+      <input id="new-date" name="date" type="date" [(ngModel)]="date" required />
+    </div>
+    <div class="field">
+      <label class="label" for="new-category">Category</label>
+      <select id="new-category" name="categoryId" [(ngModel)]="categoryId" required>
+        <option *ngFor="let category of categories" [value]="category.id">
+          {{ category.name }} ({{ category.type }})
+        </option>
+      </select>
+    </div>
+    <button type="submit" [disabled]="!canAdd()">Add transaction</button>
+  </form>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+
+  <div class="tx-feed" *ngIf="page && page.items.length; else empty">
+    <div class="tx-row" *ngFor="let transaction of page.items">
+      <div class="tx-dot" [style.background]="dotColor(transaction.categoryName)">{{ initials(transaction.categoryName) }}</div>
+      <div class="tx-main">
+        <div class="tx-description">{{ transaction.description }}</div>
+        <div class="tx-meta muted">{{ transaction.date }} &middot; {{ transaction.categoryName }}</div>
+      </div>
+      <div class="tx-amount" [class.income]="transaction.type === 'Income'" [class.expense]="transaction.type === 'Expense'">
+        {{ transaction.type === 'Income' ? '+' : '-' }}{{ transaction.amount | currency: 'EUR' }}
+      </div>
+      <button type="button" class="ghost" (click)="remove(transaction)">Delete</button>
+    </div>
+  </div>
+  <ng-template #empty><p class="muted">No transactions for this filter.</p></ng-template>
+
+  <div class="toolbar" *ngIf="page && page.totalPages > 1">
+    <button type="button" (click)="goTo(page.page - 1)" [disabled]="page.page <= 1">Previous</button>
+    <span class="muted">Page {{ page.page }} of {{ page.totalPages }} ({{ page.totalCount }} items)</span>
+    <button type="button" (click)="goTo(page.page + 1)" [disabled]="page.page >= page.totalPages">Next</button>
+  </div>
+</section>
