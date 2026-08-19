@@ -1,16 +1,17 @@
 <section class="card">
   <h2>Transactions</h2>
 
+  <h3 class="section-heading">Filter</h3>
   <div class="toolbar">
     <div class="field">
-      <label class="label" for="filter-category">Category</label>
+      <label class="label" for="filter-category">Filter by category</label>
       <select id="filter-category" [(ngModel)]="filterCategoryId" (change)="reload()">
         <option value="">All categories</option>
         <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
       </select>
     </div>
     <div class="field">
-      <label class="label" for="filter-type">Type</label>
+      <label class="label" for="filter-type">Filter by type</label>
       <select id="filter-type" [(ngModel)]="filterType" (change)="reload()">
         <option value="">Income and expenses</option>
         <option value="Income">Income</option>
@@ -19,6 +20,7 @@
     </div>
   </div>
 
+  <h3 class="section-heading">Add transaction</h3>
   <form class="toolbar" (ngSubmit)="add()">
     <div class="field">
       <label class="label" for="new-description">Description</label>
@@ -35,6 +37,7 @@
     <div class="field">
       <label class="label" for="new-category">Category</label>
       <select id="new-category" name="categoryId" [(ngModel)]="categoryId" required>
+        <option value="" disabled selected>Choose a category</option>
         <option *ngFor="let category of categories" [value]="category.id">
           {{ category.name }} ({{ category.type }})
         </option>
